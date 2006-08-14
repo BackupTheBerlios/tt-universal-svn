@@ -20,7 +20,7 @@ for (my $i=0; $i < $anz; $i++)
 		$anz_fields = @gls_line_fields;
 			for (my $ii=0; $ii < $anz_fields; $ii++)
 			{
-				print "Feld $ii ==> $gls_line_fields[$ii]\n";
+				print "Feld $ii ===> $gls_line_fields[$ii]\n";
 			}
 	}
 
