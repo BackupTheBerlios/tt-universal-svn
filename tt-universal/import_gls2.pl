@@ -4,6 +4,8 @@ use strict;
 use warnings;
 
 use Data::Dumper;
+# $Data::Dumper::Indent = 0;
+$Data::Dumper::Terse = 1;
 
 open (FILE,"d:\\down\\auftrag1.csv");
 {
