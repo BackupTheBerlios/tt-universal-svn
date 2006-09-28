@@ -10,6 +10,7 @@ $FOC_IMPORTDIR
 $FOC_TABLENAME
 );
 
+##### $STAT_DB = 'spicers_stat'; #Name der Stat Datenbank
 $STAT_DB = 'spicers_stat'; #Name der Stat Datenbank
 $STAT_DB_USER = 'root';    #Username für zugriff auf DB
 $STAT_DB_PASS = '';        #passwort für zugriff auf DB
