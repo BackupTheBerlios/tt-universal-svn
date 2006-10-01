@@ -96,23 +96,32 @@ sub get_focus {
      my @filelist = grep { -f "$STAT_STARTDIR/$FOC_IMPORTDIR/$_" } readdir(DIR);
      closedir DIR;
 
-     #open log db
-     #open data db
+     #open connection to log and data db
+   my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 1}) or die "Database connection not made: $DBI::errstr";
 
      #process each file found
      foreach my $file ( @filelist ) {
-     	 my	$INFILE_filename = "$STAT_STARTDIR/$FOC_IMPORTDIR/$file"; # input file name
+        my	$INFILE_filename = "$STAT_STARTDIR/$FOC_IMPORTDIR/$file"; # input file name
           open ( INFILE, '<', $INFILE_filename ) or die  "$0 : failed to open input file $INFILE_filename : $!\n";
+          my $countvar = 0;
+          my $log_sql = 'INSERT INTO import_log ( count , source , category , logtime , remark , lines_read )
+          VALUES (NULL ,\'get_focus\',\'INFO\', \'2006-10-01 18:54:16\', \'READ START\', \'\')';
+          $dbhandle->do($log_sql) or die "Log sql cannot be written"
                while (<INFILE>){
                     next if m/^\s*$/;        # Leerzeilen ignorieren
                     next if m/^trunc/;       # truncatingzeilen ignorieren
                     chomp;                   # zeilenvorschub raus
                     my @zeile = split (/;/); #am semikolon auftrennen
-                    print "$.->";
-                    for(my $i=0;$i<=$#zeile;$i++) {
-                         $i > 0 ? print "\;" : print "";
-                         print trim($zeile[$i]);
-                    }
+                    my $sql = 'INSERT INTO focus_data
+                    ( cono , custno , rowpos , rowsubpos , rowseq , priodate , partno , picklistno , shipmentno , stocknosu , status )
+                    VALUES
+                    ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10])';
+                    print "$.->$sql";
+                    $countvar++;
+#                    for(my $i=0;$i<=$#zeile;$i++) {
+#                         $i > 0 ? print "\;" : print "";
+#                         print trim($zeile[$i]);
+#                    }
                     print "\n";
                }
           close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
@@ -121,27 +130,26 @@ sub get_focus {
 
      } # -----  end foreach  -----
 
-     # close data db
-     # close log db
+   $dbhandle->disconnect();
      print "Ende\n";
 }
 
 ###########################################
 sub trim($) {
 ###########################################
-	my $string = shift;
-	$string =~ s/^\s+//;
-	$string =~ s/\s+$//;
-	return $string;
+  my $string = shift;
+  $string =~ s/^\s+//;
+  $string =~ s/\s+$//;
+  return $string;
 }
 
 ###########################################
 # Left trim function to remove leading whitespace
 sub ltrim($) {
 ###########################################
-	my $string = shift;
-	$string =~ s/^\s+//;
-	return $string;
+  my $string = shift;
+  $string =~ s/^\s+//;
+  return $string;
 }
 
 ###########################################
@@ -149,7 +157,7 @@ sub ltrim($) {
 sub rtrim($) {
 ###########################################
 
-	my $string = shift;
-	$string =~ s/\s+$//;
-	return $string;
+  my $string = shift;
+  $string =~ s/\s+$//;
+  return $string;
 }
