@@ -11,22 +11,22 @@ sub move2save($$$);
 
 BEGIN {require "parameters.inc.pl"};
 
-print $STAT_DB . "\n";
-print $STAT_DB_USER . "\n";
-print $STAT_DB_PASS . "\n";
+#print $STAT_DB . "\n";
+#print $STAT_DB_USER . "\n";
+#print $STAT_DB_PASS . "\n";
+#
+#print $LOG_TABLE . "\n";
+#
+#print $STAT_STARTDIR . " x1 \n";
+#print $STAT_SAVEDIR . "\n";
+#
+#print $FOC_IMPORTDIR . " x2 \n";
+#print $FOC_TABLENAME . "\n";
 
-print $LOG_TABLE . "\n";
-
-print $STAT_STARTDIR . " x1 \n";
-print $STAT_SAVEDIR . "\n";
-
-print $FOC_IMPORTDIR . " x2 \n";
-print $FOC_TABLENAME . "\n";
-
-# get_focus();
+get_focus();
 my $filename1 = "file1.file";
 my $filename2 = "file2.file";
-move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$filename2");
+# move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$filename2");
 ####################################################################
 
 sub move2save($$$)
