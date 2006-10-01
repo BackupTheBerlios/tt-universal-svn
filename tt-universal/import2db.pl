@@ -1,3 +1,9 @@
+#!/usr/bin/perl
+###########################################
+# import2db.pl -- Import statistic data into mysql tables
+# Robert Krauss, 2006 (rk-hannover@gmx.de)
+###########################################
+
 use strict;
 use warnings;
 use DBI;
@@ -27,10 +33,10 @@ get_focus();
 my $filename1 = "file1.file";
 my $filename2 = "file2.file";
 # move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$filename2");
-####################################################################
 
-sub move2save($$$)
-{
+###########################################
+sub move2save($$$) {
+###########################################
      my $from_dir = $_[0];
      my $to_dir = $_[1];
      my $file = $_[2];
@@ -80,13 +86,20 @@ sub move2save($$$)
      move("$from_dir/$file","$to_dir/$year/$mon/$file\.$timestamp\.done") or die "move not possible! $!\n";
 }
 
-sub get_focus
-{
+###########################################
+sub get_focus {
+###########################################
      print "Start\n";
 
+     #get filelist
      opendir (DIR,"$STAT_STARTDIR/$FOC_IMPORTDIR") || die "Opendir not possible: $!";
      my @filelist = grep { -f "$STAT_STARTDIR/$FOC_IMPORTDIR/$_" } readdir(DIR);
      closedir DIR;
+
+     #open log db
+     #open data db
+
+     #process each file found
      foreach my $file ( @filelist ) {
      	 my	$INFILE_filename = "$STAT_STARTDIR/$FOC_IMPORTDIR/$file"; # input file name
           open ( INFILE, '<', $INFILE_filename ) or die  "$0 : failed to open input file $INFILE_filename : $!\n";
@@ -103,27 +116,39 @@ sub get_focus
                     print "\n";
                }
           close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
+
+          #move file to save-dir
+
      } # -----  end foreach  -----
+
+     # close data db
+     # close log db
      print "Ende\n";
 }
 
-sub trim($)
-{
+###########################################
+sub trim($) {
+###########################################
 	my $string = shift;
 	$string =~ s/^\s+//;
 	$string =~ s/\s+$//;
 	return $string;
 }
+
+###########################################
 # Left trim function to remove leading whitespace
-sub ltrim($)
-{
+sub ltrim($) {
+###########################################
 	my $string = shift;
 	$string =~ s/^\s+//;
 	return $string;
 }
+
+###########################################
 # Right trim function to remove trailing whitespace
-sub rtrim($)
-{
+sub rtrim($) {
+###########################################
+
 	my $string = shift;
 	$string =~ s/\s+$//;
 	return $string;
