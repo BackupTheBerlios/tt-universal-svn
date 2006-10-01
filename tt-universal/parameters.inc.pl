@@ -6,6 +6,8 @@
 use strict;
 use vars qw(
 $STAT_DB
+$DB_HOST
+$DB_TYPE
 $STAT_DB_USER
 $STAT_DB_PASS
 $LOG_TABLE
@@ -15,8 +17,10 @@ $FOC_IMPORTDIR
 $FOC_TABLENAME
 );
 
-$STAT_DB = 's_stat';       #Name der Stat Datenbank
-##### $STAT_DB = 'spicers_stat'; #Name der Stat Datenbank
+
+$STAT_DB = 's_stat';        #Name der Stat Datenbank
+$DB_HOST = 'localhost';		#Rechnername auf dem die MySQL DB liegt
+$DB_TYPE = 'DBI:mysql:'.$STAT_DB.':'.$DB_HOST;	#DBI Zugriffsparameter für mysql
 
 $STAT_DB_USER = 'root';    #Username für zugriff auf DB
 $STAT_DB_PASS = '';        #passwort für zugriff auf DB
