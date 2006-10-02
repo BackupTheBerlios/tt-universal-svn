@@ -17,22 +17,9 @@ sub move2save($$$);
 
 BEGIN {require "parameters.inc.pl"};
 
-#print $STAT_DB . "\n";
-#print $STAT_DB_USER . "\n";
-#print $STAT_DB_PASS . "\n";
-#
-#print $LOG_TABLE . "\n";
-#
-#print $STAT_STARTDIR . " x1 \n";
-#print $STAT_SAVEDIR . "\n";
-#
-#print $FOC_IMPORTDIR . " x2 \n";
-#print $FOC_TABLENAME . "\n";
-
+#=============== MAIN =====================
 get_focus();
-my $filename1 = "file1.file";
-my $filename2 = "file2.file";
-# move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$filename2");
+#=============== END MAIN =================
 
 ###########################################
 sub move2save($$$) {
@@ -82,7 +69,7 @@ sub move2save($$$) {
      mkdir "$to_dir/$year/$mon", 0777 or die "mkdir $to_dir/$year/$mon not possibe! $!\n";
      }
 
-     print "Von: $from_dir \nNach: $to_dir/$year/$mon \nFilename im SUB: $file \nMonat: $mon Jahr: $year \n";
+#     print "Von: $from_dir \nNach: $to_dir/$year/$mon \nFilename im SUB: $file \nMonat: $mon Jahr: $year \n";
      move("$from_dir/$file","$to_dir/$year/$mon/$file\.$timestamp\.done") or die "move not possible! $!\n";
 }
 
@@ -98,17 +85,16 @@ sub get_focus {
      closedir DIR;
 
      #open connection to log and data db
-     my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 1}) or die "Database connection not made: $DBI::errstr";
+     my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
 
-     my $log_sql = 'INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
-     VALUES (NULL ,\'get_focus\',\'INFO\', NOW(), \'READ START\', \'\')';
+     my $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
+     VALUES (NULL ,\'get_focus\',\'INFO\', NOW(), \'READ START\', \'\')";
      $dbhandle->do($log_sql);
 
      #process each file found
      foreach my $file ( @filelist ) {
         my	$INFILE_filename = "$STAT_STARTDIR/$FOC_IMPORTDIR/$file"; # input file name
         open ( INFILE, '<', $INFILE_filename ) or die  "$0 : failed to open input file $INFILE_filename : $!\n";
-
         while (<INFILE>){
              next if m/^\s*$/;        # Leerzeilen ignorieren
              next if m/^trunc/;       # truncatingzeilen ignorieren
@@ -116,17 +102,19 @@ sub get_focus {
              my @zeile = split (/;/); #am semikolon auftrennen
              for(my $i=0;$i<=$#zeile;$i++) {
                   $zeile[$i] = trim($zeile[$i]);
+                  if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
+                    $zeile[$i] = 'DEFAULT'
+                  }
              }
              my $sql = "INSERT IGNORE INTO focus_data
-             ( cono , custno , rowpos , rowsubpos , rowseq , priodate , partno , picklistno , shipmentno , stocknosu , status )
+             ( cono , custno , rowpos , rowsubpos , rowseq , priodate , partno , picklistno , shipmentno , field10 , stocknosu , status )
              VALUES
-             ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],\'$zeile[5]\',$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10])";
-#             $dbhandle->do($sql);
-             print "$.->$sql\n";
+             ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],\'$zeile[5]\',\'$zeile[6]\',$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11])";
+             $dbhandle->do($sql);
              $countvar++;
              }
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
-
+#        move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         #move file to save-dir
      } # -----  end foreach  -----
 
@@ -134,7 +122,7 @@ sub get_focus {
      VALUES (NULL ,\'get_focus\',\'INFO\', NOW(), \'READ END\', \'$countvar\')";
      $dbhandle->do($log_sql);
 
-   $dbhandle->disconnect();
+     $dbhandle->disconnect();
      print "Ende\n";
 }
 
