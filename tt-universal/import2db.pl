@@ -87,6 +87,7 @@ sub get_focus {
      #open connection to log and data db
      my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
 
+     #create logfile entry
      my $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
      VALUES (NULL ,\'get_focus\',\'INFO\', NOW(), \'READ START\', \'\')";
      $dbhandle->do($log_sql);
@@ -114,10 +115,11 @@ sub get_focus {
              $countvar++;
              }
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
-#        move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         #move file to save-dir
+        move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
      } # -----  end foreach  -----
 
+     #create logfile entry
      $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
      VALUES (NULL ,\'get_focus\',\'INFO\', NOW(), \'READ END\', \'$countvar\')";
      $dbhandle->do($log_sql);
