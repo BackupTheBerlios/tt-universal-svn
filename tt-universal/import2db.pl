@@ -19,6 +19,7 @@ BEGIN {require "parameters.inc.pl"};
 
 #=============== MAIN =====================
 get_focus();
+# print "hello WORLD2!\n";
 #=============== END MAIN =================
 
 ###########################################
@@ -107,7 +108,7 @@ sub get_focus {
                     $zeile[$i] = 'DEFAULT'
                   }
              }
-             my $sql = "INSERT IGNORE INTO focus_data
+             my $sql = "INSERT IGNORE INTO $FOC_TABLENAME
              ( cono , custno , rowpos , rowsubpos , rowseq , priodate , partno , picklistno , shipmentno , field10 , stocknosu , status )
              VALUES
              ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],\'$zeile[5]\',\'$zeile[6]\',$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11])";
@@ -122,6 +123,62 @@ sub get_focus {
      #create logfile entry
      $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
      VALUES (NULL ,\'get_focus\',\'INFO\', NOW(), \'READ END\', \'$countvar\')";
+     $dbhandle->do($log_sql);
+
+     $dbhandle->disconnect();
+     print "Ende\n";
+}
+
+###########################################
+sub get_lm1 {
+###########################################
+     print "Start\n";
+     my $countvar = 0;
+
+     #get filelist
+     opendir (DIR,"$STAT_STARTDIR/$LM1_IMPORTDIR") || die "Opendir not possible: $!";
+     my @filelist = grep { -f "$STAT_STARTDIR/$LM1_IMPORTDIR/$_" } readdir(DIR);
+     closedir DIR;
+
+     #open connection to log and data db
+     my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+
+     #create logfile entry
+     my $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
+     VALUES (NULL ,\'get_lm1\',\'INFO\', NOW(), \'READ START\', \'\')";
+     $dbhandle->do($log_sql);
+
+     #process each file found
+     foreach my $file ( @filelist ) {
+        my	$INFILE_filename = "$STAT_STARTDIR/$LM1_IMPORTDIR/$file"; # input file name
+        open ( INFILE, '<', $INFILE_filename ) or die  "$0 : failed to open input file $INFILE_filename : $!\n";
+        while (<INFILE>){
+             next if m/^\s*$/;        # Leerzeilen ignorieren
+             next if m/^trunc/;       # truncatingzeilen ignorieren
+             chomp;                   # zeilenvorschub raus
+             my @zeile = split (/;/); #am semikolon auftrennen
+             for(my $i=0;$i<=$#zeile;$i++) {
+                  $zeile[$i] = trim($zeile[$i]);
+                  if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
+                    $zeile[$i] = 'DEFAULT'
+                  }
+             }
+# TODO SQL Anpassen für LM1
+             my $sql = "INSERT IGNORE INTO $LM1_TABLENAME
+             ( cono , custno , rowpos , rowsubpos , rowseq , priodate , partno , picklistno , shipmentno , field10 , stocknosu , status )
+             VALUES
+             ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],\'$zeile[5]\',\'$zeile[6]\',$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11])";
+             $dbhandle->do($sql);
+             $countvar++;
+             }
+        close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
+        #move file to save-dir
+        move2save("$STAT_STARTDIR/$LM1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+     } # -----  end foreach  -----
+
+     #create logfile entry
+     $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
+     VALUES (NULL ,\'get_lm1\',\'INFO\', NOW(), \'READ END\', \'$countvar\')";
      $dbhandle->do($log_sql);
 
      $dbhandle->disconnect();
