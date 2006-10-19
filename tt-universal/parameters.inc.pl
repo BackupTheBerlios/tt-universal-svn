@@ -15,6 +15,8 @@ $STAT_STARTDIR
 $STAT_SAVEDIR
 $FOC_IMPORTDIR
 $FOC_TABLENAME
+$LM1_IMPORTDIR
+$LM1_TABLENAME
 );
 
 
@@ -33,5 +35,7 @@ $STAT_SAVEDIR = 'save';                              #wo werden die eingelesenen
 $FOC_IMPORTDIR = 'daten-focus';                      #wo liegen die focus daten
 $FOC_TABLENAME = 'focus_data';                       #in welche tabelle kommen die focus daten
 
+$LM1_IMPORTDIR = 'lm1';                      #wo liegen die lm daten
+$LM1_TABLENAME = 'lm1_data';                       #in welche tabelle kommen die lm daten
 
 1;
