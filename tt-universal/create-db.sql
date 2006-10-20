@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Erstellungszeit: 02. Oktober 2006 um 23:28
+-- Erstellungszeit: 20. Oktober 2006 um 14:49
 -- Server Version: 5.0.21
 -- PHP-Version: 4.4.2-pl1
 --
@@ -46,4 +46,24 @@ CREATE TABLE `import_log` (
   `remark` varchar(100) collate latin1_general_ci NOT NULL,
   `lines_read` bigint(20) unsigned NOT NULL default '0',
   PRIMARY KEY  (`count`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `lm1_data`
+--
+
+CREATE TABLE `lm1_data` (
+  `stockno` int(10) unsigned NOT NULL,
+  `custno` int(10) unsigned NOT NULL,
+  `picklistno` int(10) unsigned NOT NULL,
+  `shipmentno` int(10) unsigned NOT NULL,
+  `picklistrowpos` int(10) unsigned NOT NULL,
+  `rec_date` datetime default NULL,
+  `ack_date` datetime default NULL,
+  `carrier` varchar(10) collate latin1_general_ci default NULL,
+  `lmboxno` int(10) unsigned default NULL,
+  `carrierboxno` int(10) unsigned default NULL,
+  PRIMARY KEY  (`stockno`,`custno`,`picklistno`,`shipmentno`,`picklistrowpos`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
