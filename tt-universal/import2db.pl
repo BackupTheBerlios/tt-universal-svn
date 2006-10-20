@@ -13,13 +13,16 @@ sub trim($);
 sub ltrim($);
 sub rtrim($);
 sub get_focus;
+sub get_lm1;
 sub move2save($$$);
+sub write_log_entry($$$$);
 
 BEGIN {require "parameters.inc.pl"};
 
 #=============== MAIN =====================
 get_focus();
-# print "hello WORLD2!\n";
+get_lm1();
+print "Scriptende!\n";
 #=============== END MAIN =================
 
 ###########################################
@@ -77,7 +80,7 @@ sub move2save($$$) {
 ###########################################
 sub get_focus {
 ###########################################
-     print "Start\n";
+     print "Start get_focus\n";
      my $countvar = 0;
 
      #get filelist
@@ -85,13 +88,18 @@ sub get_focus {
      my @filelist = grep { -f "$STAT_STARTDIR/$FOC_IMPORTDIR/$_" } readdir(DIR);
      closedir DIR;
 
+     #create logfile entry
+     write_log_entry("get_focus","INFO","READ START","");
+
+     if (@filelist lt 1 )
+     {
+	    # return early from subdir if dir empty and nothing to do
+        write_log_entry("get_focus","INFO","READ STOP Nothing to do","0");
+	    return;
+     }
+
      #open connection to log and data db
      my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
-
-     #create logfile entry
-     my $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
-     VALUES (NULL ,\'get_focus\',\'INFO\', NOW(), \'READ START\', \'\')";
-     $dbhandle->do($log_sql);
 
      #process each file found
      foreach my $file ( @filelist ) {
@@ -105,13 +113,15 @@ sub get_focus {
              for(my $i=0;$i<=$#zeile;$i++) {
                   $zeile[$i] = trim($zeile[$i]);
                   if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
-                    $zeile[$i] = 'DEFAULT'
+                    $zeile[$i] = 'DEFAULT';
+                  } else { #was drin? dann verpacken
+                    $zeile[$i] = "\'".$zeile[$i]."\'";
                   }
              }
-             my $sql = "INSERT IGNORE INTO $FOC_TABLENAME
-             ( cono , custno , rowpos , rowsubpos , rowseq , priodate , partno , picklistno , shipmentno , field10 , stocknosu , status )
+             my $sql = "INSERT IGNORE INTO `$FOC_TABLENAME`
+             ( `cono` , `custno` , `rowpos` , `rowsubpos` , `rowseq` , `priodate` , `partno` , `picklistno` , `shipmentno` , `field10` , `stocknosu` , `status` )
              VALUES
-             ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],\'$zeile[5]\',\'$zeile[6]\',$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11])";
+             ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11])";
              $dbhandle->do($sql);
              $countvar++;
              }
@@ -121,18 +131,15 @@ sub get_focus {
      } # -----  end foreach  -----
 
      #create logfile entry
-     $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
-     VALUES (NULL ,\'get_focus\',\'INFO\', NOW(), \'READ END\', \'$countvar\')";
-     $dbhandle->do($log_sql);
+     write_log_entry("get_focus","INFO","READ END","$countvar");
 
-     $dbhandle->disconnect();
-     print "Ende\n";
+     print "Ende get_focus\n";
 }
 
 ###########################################
 sub get_lm1 {
 ###########################################
-     print "Start\n";
+     print "Start get_focus\n";
      my $countvar = 0;
 
      #get filelist
@@ -140,13 +147,18 @@ sub get_lm1 {
      my @filelist = grep { -f "$STAT_STARTDIR/$LM1_IMPORTDIR/$_" } readdir(DIR);
      closedir DIR;
 
+     #create logfile entry
+     write_log_entry("get_lm1","INFO","READ START","");
+
+     if (@filelist lt 1 )
+     {
+	    # return early from subdir if dir empty and nothing to do
+        write_log_entry("get_lm1","INFO","READ STOP Nothing to do","0");
+	    return;
+     }
+
      #open connection to log and data db
      my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
-
-     #create logfile entry
-     my $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
-     VALUES (NULL ,\'get_lm1\',\'INFO\', NOW(), \'READ START\', \'\')";
-     $dbhandle->do($log_sql);
 
      #process each file found
      foreach my $file ( @filelist ) {
@@ -160,14 +172,16 @@ sub get_lm1 {
              for(my $i=0;$i<=$#zeile;$i++) {
                   $zeile[$i] = trim($zeile[$i]);
                   if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
-                    $zeile[$i] = 'DEFAULT'
+                    $zeile[$i] = 'DEFAULT';
+                  } else { #was drin? dann verpacken
+                    $zeile[$i] = "\'".$zeile[$i]."\'";
                   }
              }
-# TODO SQL Anpassen für LM1
-             my $sql = "INSERT IGNORE INTO $LM1_TABLENAME
-             ( cono , custno , rowpos , rowsubpos , rowseq , priodate , partno , picklistno , shipmentno , field10 , stocknosu , status )
-             VALUES
-             ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],\'$zeile[5]\',\'$zeile[6]\',$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11])";
+             my $sql =
+"INSERT IGNORE INTO `$LM1_TABLENAME` ( `stockno` , `custno` , `picklistno` , `shipmentno` , `picklistrowpos` , `rec_date` , `ack_date` , `carrier` , `lmboxno` , `carrierboxno` )
+VALUES (
+$zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9]
+)";
              $dbhandle->do($sql);
              $countvar++;
              }
@@ -177,12 +191,8 @@ sub get_lm1 {
      } # -----  end foreach  -----
 
      #create logfile entry
-     $log_sql = "INSERT INTO import_log (count , source , category , logtime , remark , lines_read )
-     VALUES (NULL ,\'get_lm1\',\'INFO\', NOW(), \'READ END\', \'$countvar\')";
-     $dbhandle->do($log_sql);
-
-     $dbhandle->disconnect();
-     print "Ende\n";
+     write_log_entry("get_lm1","INFO","READ END","$countvar");
+     print "Ende get_lm1\n";
 }
 
 
@@ -208,8 +218,25 @@ sub ltrim($) {
 # Right trim function to remove trailing whitespace
 sub rtrim($) {
 ###########################################
-
   my $string = shift;
   $string =~ s/\s+$//;
   return $string;
 }
+
+###########################################
+# Write entry in log db
+sub write_log_entry($$$$) {
+###########################################
+
+  my $log_source = $_[0];
+  my $log_cat = $_[1];
+  my $log_text = $_[2];
+  my $itemcount = $_[3];
+  my $log_dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+  my $log_sql = "INSERT INTO import_log (`count` , `source` , `category` , `logtime` , `remark` , `lines_read` )
+  VALUES (NULL ,\'$log_source\',\'$log_cat\', NOW(), \'$log_text\', \'$itemcount\')";
+  $log_dbhandle->do($log_sql);
+  $log_dbhandle->disconnect();
+  return $log_sql;
+}
+
