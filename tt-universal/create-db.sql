@@ -67,3 +67,40 @@ CREATE TABLE `lm1_data` (
   `carrierboxno` int(10) unsigned default NULL,
   PRIMARY KEY  (`stockno`,`custno`,`picklistno`,`shipmentno`,`picklistrowpos`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `dhl_easylog1`
+--
+
+CREATE TABLE `dhl_easylog1` (
+  `recordtype` varchar(25) collate latin1_general_ci default NULL,
+  `rowpos` int(10) unsigned NOT NULL default '0',
+  `unkown1` int(10) unsigned NOT NULL default '0',
+  `verpackung` varchar(25) collate latin1_general_ci default NULL,
+  `weight` double NOT NULL,
+  `laenge` double NOT NULL,
+  `breite` double NOT NULL,
+  `hoehe` double NOT NULL,
+  `unknown2` double NOT NULL,
+  `lgmboxno` int(11) unsigned NOT NULL default '0',
+  `carrierboxno` varchar(25) collate latin1_general_ci NOT NULL default '',
+  `routingcode` varchar(25) collate latin1_general_ci default NULL,
+  `servicecode` varchar(25) collate latin1_general_ci default NULL,
+  `shipmentno` int(11) unsigned NOT NULL default '0',
+  `name1` varchar(60) collate latin1_general_ci default NULL,
+  `name2` varchar(60) collate latin1_general_ci default NULL,
+  `unknown4` varchar(60) collate latin1_general_ci default NULL,
+  `strasse` varchar(60) collate latin1_general_ci default NULL,
+  `hausnummer` varchar(10) collate latin1_general_ci default NULL,
+  `ort` varchar(60) collate latin1_general_ci default NULL,
+  `postleitzahl` varchar(10) collate latin1_general_ci default NULL,
+  `countrycode` varchar(10) collate latin1_general_ci default NULL,
+  `unknown5` varchar(25) collate latin1_general_ci default NULL,
+  `unknown6` varchar(25) collate latin1_general_ci default NULL,
+  `credate` datetime NOT NULL default '0000-00-00 00:00:00',
+  `stockno` int(10) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`stockno`,`credate`,`carrierboxno`,`lgmboxno`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+
