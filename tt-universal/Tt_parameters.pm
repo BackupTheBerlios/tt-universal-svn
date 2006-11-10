@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
-print "Debug tt_paratemers\n";
+if ($debug) {print "Debug tt_paratemers\n"};
+
 $STAT_DB = 's_stat';        #Name der Stat Datenbank
 $DB_HOST = 'localhost';		#Rechnername auf dem die MySQL DB liegt
 $DB_TYPE = 'DBI:mysql:'.$STAT_DB.':'.$DB_HOST;	#DBI Zugriffsparameter für mysql
@@ -32,5 +33,7 @@ $NIGHT1_IN_TABLENAME = 'nightstar1_in';
 $NIGHT1_OUT_IMPORTDIR = 'nightstar/send';         #wo liegen die nightstar daten
 $NIGHT1_OUT_TABLENAME = 'nightstar1_out';
 
-
+###########################################
+# END of module
+###########################################
 1;
