@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-print"Debug Global\n";
+if ($debug) {print "Debug Global pm\n"};
 
 ###########################################
 sub trim($) {
@@ -48,7 +48,8 @@ sub write_log_entry($$$$) {
 ###########################################
 sub get_focus {
 ###########################################
-     print "Debug Start get_focus\n";
+
+     if ($debug) {print "Debug Start get_focus\n"};
      my $countvar = 0;
 
      #get filelist
@@ -101,13 +102,14 @@ sub get_focus {
      #create logfile entry
      write_log_entry("get_focus","INFO","READ END","$countvar");
 
-     print "Debug Ende get_focus\n";
+     if ($debug) {print "Debug Ende get_focus\n"};
 }
 
 ###########################################
 sub get_lm1 {
 ###########################################
-     print "Debug Start lm1\n";
+     if ($debug) {print "Debug Start lm1\n"};
+
      my $countvar = 0;
 
      #get filelist
@@ -160,7 +162,8 @@ $zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],
 
      #create logfile entry
      write_log_entry("get_lm1","INFO","READ END","$countvar");
-     print "Debug Ende get_lm1\n";
+
+     if ($debug) {print "Debug Ende get_lm1\n"};
 }
 
 ###########################################
@@ -188,7 +191,7 @@ sub move2save($$$) {
      mkdir "$to_dir/$year2/$mon2", 0777 or die "mkdir $to_dir/$year2/$mon2 not possibe! $!\n";
      }
 
-     print "Von: $from_dir \nNach: $to_dir/$year2/$mon2 \nFilename im SUB: $file \nMonat: $mon2 Jahr: $year2 \n";
+#     print "Von: $from_dir \nNach: $to_dir/$year2/$mon2 \nFilename im SUB: $file \nMonat: $mon2 Jahr: $year2 \n";
      move("$from_dir/$file","$to_dir/$year2/$mon2/$file\.$timestamp\.done") or die "move not possible! $!\n";
 }
 
@@ -228,5 +231,69 @@ sub get_timestamp() {
      return $timestamp;
 }
 
+###########################################
+# get all dhl easylog data
+sub get_dhl1() {
+###########################################
 
+     if ($debug) {print "Debug Start get_dhl1\n"};
+     my $countvar = 0;
+
+     #get filelist
+     opendir (DIR,"$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$DHL_EASY1_IMPORTDIR not possible: $!";
+     my @filelist = grep { -f "$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR/$_" } readdir(DIR);
+     closedir DIR;
+
+     #create logfile entry
+     write_log_entry("get_dhl1","INFO","READ START","");
+
+     if (@filelist lt 1 )
+     {
+	    # return early from subdir if dir empty and nothing to do
+        write_log_entry("get_dhl1","INFO","READ STOP Nothing to do","0");
+	    return;
+     }
+
+     #open connection to log and data db
+     my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+
+     #process each file found
+     foreach my $file ( @filelist ) {
+        my	$INFILE_filename = "$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR/$file"; # input file name
+        open ( INFILE, '<', $INFILE_filename ) or die  "$0 : failed to open input file $INFILE_filename : $!\n";
+        while (<INFILE>){
+             next if m/^\s*$/;        # Leerzeilen ignorieren
+             next if m/^trunc/;       # truncatingzeilen ignorieren
+             chomp;                   # zeilenvorschub raus
+             my @zeile = split (/;/); #am semikolon auftrennen
+             for(my $i=0;$i<=$#zeile;$i++) {
+                  $zeile[$i] = trim($zeile[$i]);
+                  if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
+                    $zeile[$i] = 'DEFAULT';
+                  } else { #was drin? dann verpacken
+                    $zeile[$i] = "\'".$zeile[$i]."\'";
+                  }
+             }
+             my $sql = "INSERT IGNORE INTO `$DHL_EASY1_TABLENAME`
+             ( `cono` , `custno` , `rowpos` , `rowsubpos` , `rowseq` , `priodate` , `partno` , `picklistno` , `shipmentno` , `field10` , `stocknosu` , `status` )
+             VALUES
+             ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11])";
+#             $dbhandle->do($sql);
+          print $sql,"\n";
+             $countvar++;
+             }
+        close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
+        #move file to save-dir
+#        move2save("$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+     } # -----  end foreach  -----
+
+     #create logfile entry
+     write_log_entry("get_dhl1","INFO","READ END","$countvar");
+
+     if ($debug) {print "Debug Ende get_dhl1\n"};
+}
+
+###########################################
+# END of module
+###########################################
 1;
