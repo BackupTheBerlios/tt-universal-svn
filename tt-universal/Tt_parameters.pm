@@ -21,7 +21,8 @@ $FOC_TABLENAME = 'focus_data';                       #in welche tabelle kommen d
 $LM1_IMPORTDIR = 'lm1';                      #wo liegen die lm daten
 $LM1_TABLENAME = 'lm1_data';                       #in welche tabelle kommen die lm daten
 
-$DHL_EASY1_IMPORTDIR = 'dhl';                     #wo liegen die dhl easylog daten
+$DHL_EASY1_IMPORTDIR = 'dhl160';                     #wo liegen die dhl easylog daten für stockno 160
+$DHL_EASY2_IMPORTDIR = 'dhl210';                     #wo liegen die dhl easylog daten für stockno 210
 $DHL_EASY1_TABLENAME = 'dhl_easylog1';
 
 $GLS_GEP1_IMPORTDIR = 'gls';                      #wo liegen die gls gepard daten
