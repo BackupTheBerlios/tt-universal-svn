@@ -350,9 +350,7 @@ $debug = 1;
                   VALUES
                   ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25])";
                   $dbhandle->do($sql);
-#                  if ($zeile[0] eq '\'SAPO\'') {
 #                    print $sql,"\n";
-#                  }
                   $countvar++;
              }  # --- end if
         }  # --- end while
@@ -453,6 +451,7 @@ $debug = 1;
                   VALUES
                   ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25])";
 #                 $dbhandle->do($sql);
+# TODO do sql aktivieren
                   print $sql,"\n";
                   $countvar++;
         }  # --- end while
