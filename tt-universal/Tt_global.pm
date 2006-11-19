@@ -84,6 +84,7 @@ sub get_focus {
                   if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
                     $zeile[$i] = 'DEFAULT';
                   } else { #was drin? dann verpacken
+                    $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
                     $zeile[$i] = "\'".$zeile[$i]."\'";
                   }
              }
@@ -144,6 +145,7 @@ sub get_lm1 {
                   if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
                     $zeile[$i] = 'DEFAULT';
                   } else { #was drin? dann verpacken
+                    $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
                     $zeile[$i] = "\'".$zeile[$i]."\'";
                   }
              }
@@ -339,6 +341,7 @@ $debug = 1;
                        if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
                          $zeile[$i] = 'DEFAULT';
                        } else { #was drin? dann verpacken
+                         $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
                          $zeile[$i] = "\'".$zeile[$i]."\'";
                        }
                   }
@@ -346,8 +349,8 @@ $debug = 1;
                   ( `recordtype` , `rowpos` , `parcelcount` , `packing` , `weight` , `volume` , `length` , `width` , `height` , `lgmboxno` , `carrierboxno` , `routingcode` , `servicecode` , `shipmentno` , `name1` , `name2` , `name3` , `street` , `street_number` , `city` , `zipcode` , `countrycode` , `contactperson1` , `contactperson2` , `credate` , `stockno` )
                   VALUES
                   ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25])";
-                 $dbhandle->do($sql);
-#                  if ($zeile[0] ne '\'SAPO\'') {
+                  $dbhandle->do($sql);
+#                  if ($zeile[0] eq '\'SAPO\'') {
 #                    print $sql,"\n";
 #                  }
                   $countvar++;
@@ -356,9 +359,9 @@ $debug = 1;
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
-#             move2save("$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
-#             move2save("$STAT_STARTDIR/$DHL_EASY2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$DHL_EASY2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         }
         write_log_entry("get_dhl1","INFO","FILENAME:$file VERFAHREN:$filetreatment LFD-NUMMER:$filecount","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
@@ -367,6 +370,107 @@ $debug = 1;
      write_log_entry("get_dhl1","INFO","READ END","$countvar");
 
      if ($debug) {print "Debug Ende get_dhl1\n"};
+     return 1;
+}
+
+###########################################
+# get all gls data
+sub get_gls1($) {
+###########################################
+$debug = 1;
+     if ($debug) {print "Debug Start get_gls1\n"};
+     my $warehouse = $_[0];        #erster parameter = warehouse / stockno
+     if ($debug) {print "Debug $warehouse\n"};
+
+     my $countvar = 0;
+     my $filelist;
+     my	$INFILE_filename;
+     my @zeile;
+     my $datadate;
+
+
+     #get filelist
+     if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+          opendir (DIR,"$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$GLS_GEP1_IMPORTDIR not possible: $!";
+          if ($debug) {print "$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR\n"};
+          @filelist = grep { -f "$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR/$_" } readdir(DIR);
+          if ($debug) {print @filelist,"\n"};
+          closedir DIR;
+     }
+     if ( $warehouse eq '210' ) {                        #pfad für stockno 210
+          opendir (DIR,"$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$GLS_GEP2_IMPORTDIR not possible: $!";
+          if ($debug) {print "$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR\n"};
+          @filelist = grep { -f "$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR/$_" } readdir(DIR);
+          if ($debug) {print @filelist,"\n"};
+          closedir DIR;
+     }
+
+     #create logfile entry
+     write_log_entry("get_gls1","INFO","READ START STOCKNO $warehouse","");
+
+     if (@filelist lt 1 )
+     {
+	    # return early from subdir if dir empty and nothing to do
+        write_log_entry("get_gls1","INFO","READ STOP Nothing to do","0");
+        if ($debug) {print @filelist,"\n"};
+        if ($debug) {print "Debug NOTHING TO DO\n"};
+	    return;
+     }
+
+     #open connection to log and data db
+     my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+
+     #process each file found
+     foreach my $file ( @filelist ) {
+        if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+             $INFILE_filename = "$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR/$file"; # input file name
+        } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
+             $INFILE_filename = "$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR/$file"; # input file name
+        }
+        open ( INFILE, '<', $INFILE_filename ) or die  "$0 : failed to open input file $INFILE_filename : $!\n";
+        while (<INFILE>){
+             next if m/^\s*$/;        # Leerzeilen ignorieren
+             next if m/^trunc/;       # truncatingzeilen ignorieren
+             chomp;                   # zeilenvorschub raus
+             @zeile = split (/\|/);    #am pipe auftrennen
+             for(my $i=0;$i<=$#zeile;$i++) {
+                  $zeile[$i] = trim($zeile[$i]);             #werte trimmen
+             }      #end for
+
+#TODO Unterschiedliche dateiformate hier erkennen
+
+             push @zeile,$warehouse;                   #zeile[24] = stockno
+             for(my $i=0;$i<=$#zeile;$i++) {          #Nochmal durch alle Felder gehen und leere Werte anpassen
+                 if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
+                   $zeile[$i] = 'DEFAULT';
+                 } else { #was drin? dann verpacken
+                   $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
+                   $zeile[$i] = "\'".$zeile[$i]."\'";
+                 }
+              }
+                  my $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
+                  ( `recordtype` , `rowpos` , `parcelcount` , `packing` , `weight` , `volume` , `length` , `width` , `height` , `lgmboxno` , `carrierboxno` , `routingcode` , `servicecode` , `shipmentno` , `name1` , `name2` , `name3` , `street` , `street_number` , `city` , `zipcode` , `countrycode` , `contactperson1` , `contactperson2` , `credate` , `stockno` )
+                  VALUES
+                  ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25])";
+#                 $dbhandle->do($sql);
+                  print $sql,"\n";
+                  $countvar++;
+        }  # --- end while
+        close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
+        #move file to save-dir
+# TODO move2save aktivieren
+        if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+#             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
+#             move2save("$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        }
+        write_log_entry("get_gls1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
+     } # -----  end foreach  -----
+
+     #create logfile entry
+     write_log_entry("get_gls1","INFO","READ END","$countvar");
+
+     if ($debug) {print "Debug Ende get_gls1\n"};
      return 1;
 }
 

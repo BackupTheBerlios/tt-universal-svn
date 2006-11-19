@@ -25,14 +25,16 @@ $DHL_EASY1_IMPORTDIR = 'dhl160';                     #wo liegen die dhl easylog 
 $DHL_EASY2_IMPORTDIR = 'dhl210';                     #wo liegen die dhl easylog daten für stockno 210
 $DHL_EASY1_TABLENAME = 'dhl_easylog1';
 
-$GLS_GEP1_IMPORTDIR = 'gls';                      #wo liegen die gls gepard daten für stockno 160
-$GLS_GEP2_IMPORTDIR = 'gls2';                      #wo liegen die gls gepard daten für stockno 210
+$GLS_GEP1_IMPORTDIR = 'gls160';                      #wo liegen die gls gepard daten für stockno 160
+$GLS_GEP2_IMPORTDIR = 'gls210';                      #wo liegen die gls gepard daten für stockno 210
 $GLS_GEP1_TABLENAME = 'gls_gepard1';
 
-$NIGHT1_IN_IMPORTDIR = 'nightstar/receive';       #wo liegen die nightstar daten
+$NIGHT1_IN_IMPORTDIR = 'nightstar160/receive';       #wo liegen die nightstar daten 160
+$NIGHT2_IN_IMPORTDIR = 'nightstar210/receive';       #wo liegen die nightstar daten 210
 $NIGHT1_IN_TABLENAME = 'nightstar1_in';
 
-$NIGHT1_OUT_IMPORTDIR = 'nightstar/send';         #wo liegen die nightstar daten
+$NIGHT1_OUT_IMPORTDIR = 'nightstar160/send';         #wo liegen die nightstar daten 160
+$NIGHT2_OUT_IMPORTDIR = 'nightstar210/send';         #wo liegen die nightstar daten
 $NIGHT1_OUT_TABLENAME = 'nightstar1_out';
 
 ###########################################

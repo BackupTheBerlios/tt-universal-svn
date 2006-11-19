@@ -104,3 +104,39 @@ CREATE TABLE `dhl_easylog1` (
   PRIMARY KEY  (`stockno`,`credate`,`carrierboxno`,`lgmboxno`,`shipmentno`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `gls_gepard1`
+--
+
+CREATE TABLE `gls_gepard1` (
+  `date1` datetime NOT NULL default '0000-00-00 00:00:00',
+  `date2` datetime NOT NULL default '0000-00-00 00:00:00',
+  `custno` int(10) unsigned NOT NULL,
+  `carrierboxno` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `shipmentno` varchar(40) collate latin1_general_ci NOT NULL default '',
+  `name1` varchar(60) collate latin1_general_ci NOT NULL default '',
+  `name2` varchar(60) collate latin1_general_ci default NULL,
+  `name3` varchar(60) collate latin1_general_ci default NULL,
+  `street` varchar(60) collate latin1_general_ci NOT NULL default '',
+  `city` varchar(60) collate latin1_general_ci NOT NULL default '',
+  `city2` varchar(60) collate latin1_general_ci NOT NULL default '',
+  `zipcode` varchar(17) collate latin1_general_ci NOT NULL default '',
+  `countrycode` varchar(3) collate latin1_general_ci NOT NULL default '',
+  `stockno` int(10) unsigned NOT NULL default '0',
+  `unknown1` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown2` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown3` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown4` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown5` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown6` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown7` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown8` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown9` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown10` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown11` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown12` varchar(35) collate latin1_general_ci NOT NULL default '',
+  `unknown13` varchar(35) collate latin1_general_ci NOT NULL default '',
+  PRIMARY KEY  (`stockno`,`date1`,`carrierboxno`,`custno`,`shipmentno`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;

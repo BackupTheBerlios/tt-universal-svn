@@ -20,9 +20,9 @@ $| = 1;                     # don't buffer STDOUT (for EPIC use)
 
 #=============== MAIN =====================
 if ($debug) {print get_timestamp()," ScriptStart!\n"};
-# et_dhl1('160');
+get_dhl1('160');
 get_dhl1('210');
 if ($debug) {print get_timestamp()," ScriptEnde!\n"};
 #=============== END MAIN =================
-# TODO move2save aktivieren
+
 
