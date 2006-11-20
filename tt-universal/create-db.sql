@@ -123,6 +123,7 @@ CREATE TABLE `gls_gepard1` (
   `city` varchar(60) collate latin1_general_ci NOT NULL default '',
   `city2` varchar(60) collate latin1_general_ci NOT NULL default '',
   `zipcode` varchar(17) collate latin1_general_ci NOT NULL default '',
+  `zipcode2` varchar(17) collate latin1_general_ci NOT NULL default '',
   `countrycode` varchar(3) collate latin1_general_ci NOT NULL default '',
   `stockno` int(10) unsigned NOT NULL default '0',
   `unknown1` varchar(35) collate latin1_general_ci NOT NULL default '',

@@ -385,6 +385,8 @@ $debug = 1;
      my	$INFILE_filename;
      my @zeile;
      my $datadate;
+     my $rec_format;
+     my $temp;
 
 
      #get filelist
@@ -431,13 +433,21 @@ $debug = 1;
              next if m/^trunc/;       # truncatingzeilen ignorieren
              chomp;                   # zeilenvorschub raus
              @zeile = split (/\|/);    #am pipe auftrennen
-             for(my $i=0;$i<=$#zeile;$i++) {
+if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufheben
+             for (my $i=0;$i<=$#zeile;$i++) {
                   $zeile[$i] = trim($zeile[$i]);             #werte trimmen
              }      #end for
-
-#TODO Unterschiedliche dateiformate hier erkennen
-
-             push @zeile,$warehouse;                   #zeile[24] = stockno
+             # erkennen des recordformats
+             if ($zeile[20] =~ m/^\d{2}:\d{2}:\d{2}$/ ) { #format RMD
+             	$rec_format = 'RMD';
+             }
+             elsif ($zeile[0] =~ m/^\d{12}$/ ) {         #format GP
+              	$rec_format = 'GP';
+             }
+             elsif ($zeile[0] =~ m/^\d{2}.\d{2}.\d{4}$/ ) { #format GPMON
+               	$rec_format = 'GPMON';
+             }
+             push @zeile,$warehouse;                   #letzte $zeile = stockno
              for(my $i=0;$i<=$#zeile;$i++) {          #Nochmal durch alle Felder gehen und leere Werte anpassen
                  if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
                    $zeile[$i] = 'DEFAULT';
@@ -446,14 +456,29 @@ $debug = 1;
                    $zeile[$i] = "\'".$zeile[$i]."\'";
                  }
               }
-                  my $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
-                  ( `recordtype` , `rowpos` , `parcelcount` , `packing` , `weight` , `volume` , `length` , `width` , `height` , `lgmboxno` , `carrierboxno` , `routingcode` , `servicecode` , `shipmentno` , `name1` , `name2` , `name3` , `street` , `street_number` , `city` , `zipcode` , `countrycode` , `contactperson1` , `contactperson2` , `credate` , `stockno` )
-                  VALUES
-                  ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25])";
-#                 $dbhandle->do($sql);
+              if ($rec_format eq 'RMD') { #format RMD
+                    $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
+                    ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown11` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `time` , `unknown10` )
+                    VALUES
+                    ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22])";
+              }
+              elsif ($rec_format eq 'GP') {         #format GP
+                    $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
+                    ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `unknown9` , `unknown10` )
+                    VALUES
+                    ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22])";
+              }
+              elsif ($rec_format eq 'GPMON') { #format GPMON
+                    $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
+                    ( `carrierboxno` , `date1` , `unknown1` , `unknown12` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `unknown13` , `name1` , `street` , `city2` , `shipmentno` )
+                    VALUES
+                    ($zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18])";
+              }
+#              $dbhandle->do($sql);
 # TODO do sql aktivieren
-                  print $sql,"\n";
-                  $countvar++;
+              $sql=' ';
+              print "\nDatei: $file Format: $rec_format Spalten: $temp SQL: ",$sql,"\n";
+              $countvar++;
         }  # --- end while
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
