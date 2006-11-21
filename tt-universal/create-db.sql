@@ -141,3 +141,44 @@ CREATE TABLE `gls_gepard1` (
   `unknown13` varchar(35) collate latin1_general_ci NOT NULL default '',
   PRIMARY KEY  (`stockno`,`date1`,`carrierboxno`,`custno`,`shipmentno`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `nightstar1_out`
+--
+
+CREATE TABLE `nightstar1_out` (
+  `carrierrefno` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `carrierboxno` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `custno` int(10) unsigned NOT NULL default '0',
+  `name1` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `name2` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `street` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `zipcode` varchar(10) collate latin1_general_ci NOT NULL default '',
+  `city` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `deliver_until` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `shipdate` datetime NOT NULL default '0000-00-00 00:00:00',
+  `parcelcount1` int(10) unsigned NOT NULL default '0',
+  `parcelcount2` int(10) unsigned NOT NULL default '0',
+  `weight` double NOT NULL default '0',
+  `shipmentno` int(10) unsigned NOT NULL default '0',
+  `sender1` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `sender2` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `sender3` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `content` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `atg` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `ast` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `shipment` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `dispatch` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `labeltext` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `freight_terms` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `end_customer1` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `end_customer2` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `end_customer3` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `end_customer4` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `end_customer5` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `stockno` int(10) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`stockno`,`shipdate`,`carrierboxno`,`shipmentno`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+
