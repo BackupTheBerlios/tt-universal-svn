@@ -447,6 +447,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
              elsif ($zeile[0] =~ m/^\d{2}.\d{2}.\d{4}$/ ) { #format GPMON
                	$rec_format = 'GPMON';
              }
+# TODO Leere spalten am ende auffüllen
              push @zeile,$warehouse;                   #letzte $zeile = stockno
              for(my $i=0;$i<=$#zeile;$i++) {          #Nochmal durch alle Felder gehen und leere Werte anpassen
                  if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
@@ -458,25 +459,25 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
               }
               if ($rec_format eq 'RMD') { #format RMD
                     $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
-                    ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown11` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `time` , `unknown10` )
+                    ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown11` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `time` , `unknown10` , `stockno` )
                     VALUES
                     ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22])";
               }
               elsif ($rec_format eq 'GP') {         #format GP
                     $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
-                    ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `unknown9` , `unknown10` )
+                    ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `unknown9` , `unknown10` , `stockno` )
                     VALUES
                     ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22])";
               }
               elsif ($rec_format eq 'GPMON') { #format GPMON
                     $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
-                    ( `carrierboxno` , `date1` , `unknown1` , `unknown12` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `unknown13` , `name1` , `street` , `city2` , `shipmentno` )
+                    ( `carrierboxno` , `date1` , `unknown1` , `unknown12` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `unknown13` , `name1` , `street` , `city2` , `shipmentno` , `stockno` )
                     VALUES
                     ($zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18])";
               }
 #              $dbhandle->do($sql);
 # TODO do sql aktivieren
-              $sql=' ';
+if ($rec_format ne 'GPMON') { $sql=' ';}
               print "\nDatei: $file Format: $rec_format Spalten: $temp SQL: ",$sql,"\n";
               $countvar++;
         }  # --- end while
