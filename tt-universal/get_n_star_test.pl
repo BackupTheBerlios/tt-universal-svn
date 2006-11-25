@@ -37,35 +37,35 @@ my $Enkundename4 = substr ($x1,459,8);
 my $Enkundename5 = substr ($x1,467,30);
 my $stockno = substr ($x1,8,3);
 
-push @zeile, substr ($x1,0,19);
-push @zeile, substr ($x1,19,8);
-push @zeile, substr ($x1,27,7);
-push @zeile, substr ($x1,34,30);
-push @zeile, substr ($x1,64,30);
-push @zeile, substr ($x1,94,30);
-push @zeile, substr ($x1,124,8);
-push @zeile, substr ($x1,132,30);
-push @zeile, substr ($x1,162,5);
-push @zeile, substr ($x1,167,8);
-push @zeile, substr ($x1,175,2);
-push @zeile, substr ($x1,177,2);
-push @zeile, substr ($x1,179,6);
-push @zeile, substr ($x1,185,6);
-push @zeile, substr ($x1,191,30);
-push @zeile, substr ($x1,221,8);
-push @zeile, substr ($x1,229,30);
-push @zeile, substr ($x1,259,20);
-push @zeile, substr ($x1,279,10);
-push @zeile, substr ($x1,289,10);
-push @zeile, substr ($x1,299,15);
-push @zeile, substr ($x1,314,20);
-push @zeile, substr ($x1,334,15);
-push @zeile, substr ($x1,349,20);
-push @zeile, substr ($x1,369,30);
-push @zeile, substr ($x1,399,30);
-push @zeile, substr ($x1,429,30);
-push @zeile, substr ($x1,459,8);
-push @zeile, substr ($x1,467,30);
+push @zeile, substr ($x1,0,19);     #carrierrefno
+push @zeile, substr ($x1,19,8);     #carrierboxno
+push @zeile, substr ($x1,27,7);     #custno
+push @zeile, substr ($x1,34,30);     #name1
+push @zeile, substr ($x1,64,30);     #name2
+push @zeile, substr ($x1,94,30);     #street
+push @zeile, substr ($x1,124,8);     #zipcode
+push @zeile, substr ($x1,132,30);     #city
+push @zeile, substr ($x1,162,5);     #deliver_until
+push @zeile, substr ($x1,167,8);     #shipdate
+push @zeile, substr ($x1,175,2);     #parcelcount1
+push @zeile, substr ($x1,177,2);     #parcelcount2
+push @zeile, substr ($x1,179,6);     #weight
+push @zeile, substr ($x1,185,6);     #shipmentno
+push @zeile, substr ($x1,191,30);     #sender1
+push @zeile, substr ($x1,221,8);     #sender2
+push @zeile, substr ($x1,229,30);     #sender3
+push @zeile, substr ($x1,259,20);     #content
+push @zeile, substr ($x1,279,10);     #atg
+push @zeile, substr ($x1,289,10);     #ast
+push @zeile, substr ($x1,299,15);     #shipment
+push @zeile, substr ($x1,314,20);     #dispatch
+push @zeile, substr ($x1,334,15);     #labeltext
+push @zeile, substr ($x1,349,20);     #freight_terms
+push @zeile, substr ($x1,369,30);     #end_customer1
+push @zeile, substr ($x1,399,30);     #end_customer2
+push @zeile, substr ($x1,429,30);     #end_customer3
+push @zeile, substr ($x1,459,8);     #end_customer4
+push @zeile, substr ($x1,467,30);     #end_customer5
 push @zeile, substr ($x1,8,3);       #stockno
 
 for(my $i=0;$i<=$#zeile;$i++) {
