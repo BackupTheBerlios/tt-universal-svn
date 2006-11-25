@@ -201,36 +201,60 @@ sub move2save($$$) {
 1;
 
 ###########################################
-sub get_timestamp() {
+sub get_timestamp(;$) {
 ###########################################
 
-     my ($sec,$min,$hour,$mday,$mon1,$year1,$wday,$ydat,$isdst)=localtime();         #aktuelle zeit holen
-     my $mon = $mon1+1;
-     my $year = $year1+1900;
-     my $day = $mday;
-     if (length($mon) == 1)
-     {
-         $mon="0$mon";                  #monate immer zweistellig
-     }
-     if (length($day) == 1)
-     {
-         $day="0$day";                  #tage immer zweistellig
-     }
-     if(length($hour) == 1)
-     {
-        $hour="0$hour";                 #stunden auch
-     }
-     if(length($min) == 1)
-     {
-        $min="0$min";                   #minuten auch
-     }
-     if(length($sec) == 1)
-     {
-        $sec="0$sec";                   #sekunden auch
-     }
-     my $timestamp = $year.$mon.$day.$hour.$min.$sec;       #zeitstempel bauen
+    my ($format) = @_;
+    $format = 'CCYYMMDDhhmmss' if not defined $format;
 
-     return $timestamp;
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+        localtime(time);
+
+    my %fields = (
+        CC => int(($year + 1900) / 100),
+        YY => $year % 100,
+        MM => $mon + 1,
+        DD => $mday,
+        hh => $hour,
+        mm => $min,
+        ss => $sec
+    );
+
+    %fields = map {$_ => sprintf('%02u', $fields{$_})} keys %fields;
+
+    foreach my $field (keys %fields) {
+        $format =~ s/$field/$fields{$field}/g;
+    }
+
+    return $format;
+
+#     my ($sec,$min,$hour,$mday,$mon1,$year1,$wday,$ydat,$isdst)=localtime();         #aktuelle zeit holen
+#     my $mon = $mon1+1;
+#     my $year = $year1+1900;
+#     my $day = $mday;
+#     if (length($mon) == 1)
+#     {
+#         $mon="0$mon";                  #monate immer zweistellig
+#     }
+#     if (length($day) == 1)
+#     {
+#         $day="0$day";                  #tage immer zweistellig
+#     }
+#     if(length($hour) == 1)
+#     {
+#        $hour="0$hour";                 #stunden auch
+#     }
+#     if(length($min) == 1)
+#     {
+#        $min="0$min";                   #minuten auch
+#     }
+#     if(length($sec) == 1)
+#     {
+#        $sec="0$sec";                   #sekunden auch
+#     }
+#     my $timestamp = $year.$mon.$day.$hour.$min.$sec;       #zeitstempel bauen
+#
+#     return $timestamp;
 }
 
 ###########################################
@@ -447,7 +471,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
              elsif ($zeile[0] =~ m/^\d{2}.\d{2}.\d{4}$/ ) { #format GPMON
                	$rec_format = 'GPMON';
              }
-# TODO Leere spalten am ende auffüllen
+# TODO Leere spalten am ende auffüllen gls
              push @zeile,$warehouse;                   #letzte $zeile = stockno
              for(my $i=0;$i<=$#zeile;$i++) {          #Nochmal durch alle Felder gehen und leere Werte anpassen
                  if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
@@ -457,6 +481,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
                    $zeile[$i] = "\'".$zeile[$i]."\'";
                  }
               }
+# TODO datum bei gls nach iso wandeln
               if ($rec_format eq 'RMD') { #format RMD
                     $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
                     ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown11` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `time` , `unknown10` , `stockno` )
@@ -476,14 +501,14 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
                     ($zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18])";
               }
 #              $dbhandle->do($sql);
-# TODO do sql aktivieren
+# TODO do sql aktivieren gls
 if ($rec_format ne 'GPMON') { $sql=' ';}
               print "\nDatei: $file Format: $rec_format Spalten: $temp SQL: ",$sql,"\n";
               $countvar++;
         }  # --- end while
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
-# TODO move2save aktivieren
+# TODO move2save aktivieren gls
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
 #             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
@@ -497,6 +522,152 @@ if ($rec_format ne 'GPMON') { $sql=' ';}
 
      if ($debug) {print "Debug Ende get_gls1\n"};
      return 1;
+}
+
+###########################################
+# get all data from nightstar that are sent
+sub get_nightstar_send1($) {
+###########################################
+$debug = 1;
+     if ($debug) {print "Debug Start get_nightstar_send1\n"};
+     my $warehouse = $_[0];        #erster parameter = warehouse / stockno
+     if ($debug) {print "Debug $warehouse\n"};
+
+     my $countvar = 0;
+     my $filelist;
+     my	$INFILE_filename;
+     my @zeile;
+     my $datadate;
+     my $rec_format;
+     my $temp;
+
+
+     #get filelist
+     if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+          opendir (DIR,"$STAT_STARTDIR/$NIGHT1_OUT_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$NIGHT1_OUT_IMPORTDIR not possible: $!";
+          if ($debug) {print "$STAT_STARTDIR/$NIGHT1_OUT_IMPORTDIR\n"};
+          @filelist = grep { -f "$STAT_STARTDIR/$NIGHT1_OUT_IMPORTDIR/$_" } readdir(DIR);
+          if ($debug) {print @filelist,"\n"};
+          closedir DIR;
+     }
+     if ( $warehouse eq '210' ) {                        #pfad für stockno 210
+          opendir (DIR,"$STAT_STARTDIR/$NIGHT2_OUT_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$NIGHT2_OUT_IMPORTDIR not possible: $!";
+          if ($debug) {print "$STAT_STARTDIR/$NIGHT2_OUT_IMPORTDIR\n"};
+          @filelist = grep { -f "$STAT_STARTDIR/$NIGHT2_OUT_IMPORTDIR/$_" } readdir(DIR);
+          if ($debug) {print @filelist,"\n"};
+          closedir DIR;
+     }
+
+     #create logfile entry
+     write_log_entry("get_nightstar_send1","INFO","READ START STOCKNO $warehouse","");
+
+     if (@filelist lt 1 )
+     {
+	    # return early from subdir if dir empty and nothing to do
+        write_log_entry("get_nightstar_send1","INFO","READ STOP Nothing to do","0");
+        if ($debug) {print @filelist,"\n"};
+        if ($debug) {print "Debug NOTHING TO DO\n"};
+	    return;
+     }
+
+     #open connection to log and data db
+     my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+
+     #process each file found
+     foreach my $file ( @filelist ) {
+        if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+             $INFILE_filename = "$STAT_STARTDIR/$NIGHT1_OUT_IMPORTDIR/$file"; # input file name
+        } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
+             $INFILE_filename = "$STAT_STARTDIR/$NIGHT2_OUT_IMPORTDIR/$file"; # input file name
+        }
+        open ( INFILE, '<', $INFILE_filename ) or die  "$0 : failed to open input file $INFILE_filename : $!\n";
+        while (<INFILE>){
+             next if m/^\s*$/;        # Leerzeilen ignorieren
+             next if m/^trunc/;       # truncatingzeilen ignorieren
+             chomp;                   # zeilenvorschub raus
+             undef @zeile;            # var leeren für neuen durchgang
+             push @zeile, substr ($_,0,19);     #carrierrefno
+             push @zeile, substr ($_,19,8);     #carrierboxno
+             push @zeile, substr ($_,27,7);     #custno
+             push @zeile, substr ($_,34,30);     #name1
+             push @zeile, substr ($_,64,30);     #name2
+             push @zeile, substr ($_,94,30);     #street
+             push @zeile, substr ($_,124,8);     #zipcode
+             push @zeile, substr ($_,132,30);     #city
+             push @zeile, substr ($_,162,5);     #deliver_until
+             push @zeile, date_switch(substr ($_,167,8));     #shipdate gewandelt nach iso
+             push @zeile, substr ($_,175,2);     #parcelcount1
+             push @zeile, substr ($_,177,2);     #parcelcount2
+             push @zeile, substr ($_,179,6);     #weight
+             push @zeile, substr ($_,185,6);     #shipmentno
+             push @zeile, substr ($_,191,30);     #sender1
+             push @zeile, substr ($_,221,8);     #sender2
+             push @zeile, substr ($_,229,30);     #sender3
+             push @zeile, substr ($_,259,20);     #content
+             push @zeile, substr ($_,279,10);     #atg
+             push @zeile, substr ($_,289,10);     #ast
+             push @zeile, substr ($_,299,15);     #shipment
+             push @zeile, substr ($_,314,20);     #dispatch
+             push @zeile, substr ($_,334,15);     #labeltext
+             push @zeile, substr ($_,349,20);     #freight_terms
+             push @zeile, substr ($_,369,30);     #end_customer1
+             push @zeile, substr ($_,399,30);     #end_customer2
+             push @zeile, substr ($_,429,30);     #end_customer3
+             push @zeile, substr ($_,459,8);     #end_customer4
+             push @zeile, substr ($_,467,30);     #end_customer5
+             push @zeile, substr ($_,8,3);       #stockno
+if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufheben
+             for (my $i=0;$i<=$#zeile;$i++) {
+                 $zeile[$i] = trim($zeile[$i]);             #werte trimmen
+                 if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
+                   $zeile[$i] = 'DEFAULT';
+                 } else { #was drin? dann verpacken
+                   $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
+                   $zeile[$i] = "\'".$zeile[$i]."\'";
+                 }
+              }
+              $sql = "INSERT IGNORE INTO `$NIGHT1_OUT_TABLENAME`
+              (`carrierrefno`,`carrierboxno`,`custno`,`name1`,`name2`,`street`,`zipcode`,`city`,`deliver_until`,`shipdate`,`parcelcount1`,`parcelcount2`,`weight`,`shipmentno`,`sender1`,`sender2`,`sender3`,`content`,`atg`,`ast`,`shipment`,`dispatch`,`labeltext`,`freight_terms`,`end_customer1`,`end_customer2`,`end_customer3`,`end_customer4`,`end_customer5`,`stockno`)
+              VALUES
+              ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25],$zeile[26],$zeile[27],$zeile[28],$zeile[29])";
+              $dbhandle->do($sql);
+#               print "SQL: ",$sql,"\n";
+              $countvar++;
+        }  # --- end while
+        close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
+        #move file to save-dir
+        if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+             move2save("$STAT_STARTDIR/$NIGHT1_OUT_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
+             move2save("$STAT_STARTDIR/$NIGHT2_OUT_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        }
+        write_log_entry("get_nightstar_send1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
+     } # -----  end foreach  -----
+
+     #create logfile entry
+     write_log_entry("get_nightstar_send1","INFO","READ END","$countvar");
+
+     if ($debug) {print "Debug Ende get_nightstar_send1\n"};
+     return 1;
+}
+
+###########################################
+# reformat date from german to iso
+sub date_switch($) {
+###########################################
+     my $date_in = $_[0];                         #das datum wie es übergeben wurde
+     my $date_return;
+
+     if (length ($date_in) == 8 ) {               #Datumsformat 8 stellen? dd.mm.yy
+          $date_return = "20".substr ($date_in,6,2)."-".substr ($date_in,3,2)."-".substr ($date_in,0,2);
+     }
+     elsif (length ($date_in) == 10 ) {           #Datumsformat 10 stellen? dd.mm.yy
+          $date_return = substr ($date_in,6,4)."-".substr ($date_in,3,2)."-".substr ($date_in,0,2);
+     }
+     else {
+          $date_return = "0000-00-00";            #null zurückgeben wenn übergebene länge keinen sinn macht
+     }
+     return $date_return;
 }
 
 ###########################################
