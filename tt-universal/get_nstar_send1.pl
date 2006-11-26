@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ###########################################
-# get_dhl1.pl -- Import statistic from easylog into mysql tables
+# get_nightstar_send1.pl -- Import statistic from easylog into mysql tables
 # Robert Krauss, 2006 (rk-hannover@gmx.de)
 ###########################################
 

@@ -182,3 +182,18 @@ CREATE TABLE `nightstar1_out` (
   PRIMARY KEY  (`stockno`,`shipdate`,`carrierboxno`,`shipmentno`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `nightstar1_in`
+--
+
+CREATE TABLE `nightstar1_in` (
+  `carrierrefno` varchar(30) collate latin1_general_ci NOT NULL default '',
+  `custno` int(10) unsigned NOT NULL default '0',
+  `date1` datetime NOT NULL default '0000-00-00 00:00:00',
+  `value1` varchar(14) collate latin1_general_ci NOT NULL default '',
+  `stockno` int(10) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`carrierrefno`,`date1`,`stockno`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+
