@@ -4,7 +4,7 @@
 # Robert Krauss, 2006 (rk-hannover@gmx.de)
 ###########################################
 
-my $debug = 0;              # set to 1 for debug print (for each .pl .pm separately)
+my $debug = 1;              # set to 1 for debug print (for each .pl .pm separately)
 
 use strict;
 use warnings;
@@ -19,7 +19,7 @@ $| = 1;                     # don't buffer STDOUT (for EPIC use)
 
 #=============== MAIN =====================
 if ($debug) {print get_timestamp()," ScriptStart!\n"};
-# get_focus();
-get_lm1();
+get_focus();
+# get_lm1();
 if ($debug) {print get_timestamp()," ScriptEnde!\n"};
 #=============== END MAIN =================

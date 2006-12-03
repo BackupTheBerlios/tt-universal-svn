@@ -79,6 +79,9 @@ sub get_focus {
              next if m/^trunc/;       # truncatingzeilen ignorieren
              chomp;                   # zeilenvorschub raus
              my @zeile = split (/;/); #am semikolon auftrennen
+             if ($#zeile == 10){      #nur 11 spalten? dann fehlt eine
+                  push @zeile,'';     # eine leere spalte hinzufuegen
+             };
              for(my $i=0;$i<=$#zeile;$i++) {
                   $zeile[$i] = trim($zeile[$i]);
                   if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
@@ -97,7 +100,9 @@ sub get_focus {
              }
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
-        move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+# TODO move2save reaktivieren getfocus
+#        move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        write_log_entry("get_focus","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
 
      #create logfile entry
@@ -140,6 +145,9 @@ sub get_lm1 {
              next if m/^trunc/;       # truncatingzeilen ignorieren
              chomp;                   # zeilenvorschub raus
              my @zeile = split (/;/); #am semikolon auftrennen
+             if ($#zeile == 8){       #nur 9 spalten? dann fehlt eine
+                  push @zeile,'';     # eine leere spalte hinzufuegen
+             };
              for(my $i=0;$i<=$#zeile;$i++) {
                   $zeile[$i] = trim($zeile[$i]);
                   if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
@@ -154,12 +162,14 @@ sub get_lm1 {
 VALUES (
 $zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9]
 )";
-             $dbhandle->do($sql);
+             $dbhandle->do($sql) or warn "do sql error:\n$sql\nDBI Error: $DBI::errstr";
              $countvar++;
              }
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
-        move2save("$STAT_STARTDIR/$LM1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+# TODO move2save reaktivieren get_lm1
+#        move2save("$STAT_STARTDIR/$LM1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        write_log_entry("get_lm1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
 
      #create logfile entry

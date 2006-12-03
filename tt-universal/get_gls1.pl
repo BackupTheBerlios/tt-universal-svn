@@ -15,6 +15,7 @@ use Tt_parameters ();       #our own module for global vars
 
 sub get_gls1($);
 
+# TODO anpassen an endgültige gls daten get_gls1
 
 $| = 1;                     # don't buffer STDOUT (for EPIC use)
 
