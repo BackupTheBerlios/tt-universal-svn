@@ -11,7 +11,7 @@ $STAT_DB_PASS = '';        #passwort für zugriff auf DB
 
 $LOG_TABLE = 'import_log'; #name der logging tabelle
 
-# $STAT_STARTDIR = 'e:/spicers';                                      #wo liegen die daten der anwendung
+# $STAT_STARTDIR = 'C:/down/spicers';                                      #wo liegen die daten der anwendung
 $STAT_STARTDIR = '//gringots/netzdaten/win_data/projekte/spicers';    #wo liegen die daten der anwendung
 $STAT_SAVEDIR = 'save';                                               #wo werden die eingelesenen files abgelegt
 
