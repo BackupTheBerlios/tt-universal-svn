@@ -26,7 +26,7 @@ CREATE TABLE `focus_data` (
   `partno` varchar(10) collate latin1_general_ci default NULL,
   `picklistno` int(10) unsigned default NULL,
   `shipmentno` int(10) unsigned default NULL,
-  `field10` varchar(10) collate latin1_general_ci default NULL,
+  `shipmentrowpos` varchar(10) collate latin1_general_ci default NULL,
   `stocknosu` varchar(3) collate latin1_general_ci default NULL,
   `status` int(10) unsigned NOT NULL default '0',
   PRIMARY KEY  (`cono`,`custno`,`rowpos`,`rowsubpos`,`rowseq`,`status`)
