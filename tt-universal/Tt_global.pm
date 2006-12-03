@@ -89,7 +89,7 @@ sub get_focus {
                   }
              }
              my $sql = "INSERT IGNORE INTO `$FOC_TABLENAME`
-             ( `cono` , `custno` , `rowpos` , `rowsubpos` , `rowseq` , `priodate` , `partno` , `picklistno` , `shipmentno` , `field10` , `stocknosu` , `status` )
+             ( `cono` , `custno` , `rowpos` , `rowsubpos` , `rowseq` , `priodate` , `partno` , `picklistno` , `shipmentno` , `shipmentrowpos` , `stocknosu` , `status` )
              VALUES
              ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11])";
              $dbhandle->do($sql);
