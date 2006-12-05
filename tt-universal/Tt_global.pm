@@ -100,8 +100,7 @@ sub get_focus {
              }
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
-# TODO move2save reaktivieren getfocus
-#        move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        move2save("$STAT_STARTDIR/$FOC_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         write_log_entry("get_focus","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
 
@@ -167,8 +166,7 @@ $zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],
              }
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
-# TODO move2save reaktivieren get_lm1
-#        move2save("$STAT_STARTDIR/$LM1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        move2save("$STAT_STARTDIR/$LM1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         write_log_entry("get_lm1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
 
@@ -237,34 +235,6 @@ sub get_timestamp(;$) {
     }
 
     return $format;
-
-#     my ($sec,$min,$hour,$mday,$mon1,$year1,$wday,$ydat,$isdst)=localtime();         #aktuelle zeit holen
-#     my $mon = $mon1+1;
-#     my $year = $year1+1900;
-#     my $day = $mday;
-#     if (length($mon) == 1)
-#     {
-#         $mon="0$mon";                  #monate immer zweistellig
-#     }
-#     if (length($day) == 1)
-#     {
-#         $day="0$day";                  #tage immer zweistellig
-#     }
-#     if(length($hour) == 1)
-#     {
-#        $hour="0$hour";                 #stunden auch
-#     }
-#     if(length($min) == 1)
-#     {
-#        $min="0$min";                   #minuten auch
-#     }
-#     if(length($sec) == 1)
-#     {
-#        $sec="0$sec";                   #sekunden auch
-#     }
-#     my $timestamp = $year.$mon.$day.$hour.$min.$sec;       #zeitstempel bauen
-#
-#     return $timestamp;
 }
 
 ###########################################
@@ -420,7 +390,9 @@ $debug = 1;
      my @zeile;
      my $datadate;
      my $rec_format;
+     my $countcolumn;
      my $temp;
+     my $city;
 
 
      #get filelist
@@ -466,22 +438,23 @@ $debug = 1;
              next if m/^\s*$/;        # Leerzeilen ignorieren
              next if m/^trunc/;       # truncatingzeilen ignorieren
              chomp;                   # zeilenvorschub raus
-             @zeile = split (/\|/);    #am pipe auftrennen
-if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufheben
+             @zeile = split (/\|/);   # am pipe auftrennen
+             $countcolumn = $#zeile;  # anzahl der arrayelemente aufheben
              for (my $i=0;$i<=$#zeile;$i++) {
                   $zeile[$i] = trim($zeile[$i]);             #werte trimmen
              }      #end for
              # erkennen des recordformats
-             if ($zeile[20] =~ m/^\d{2}:\d{2}:\d{2}$/ ) { #format RMD
-             	$rec_format = 'RMD';
-             }
-             elsif ($zeile[0] =~ m/^\d{12}$/ ) {         #format GP
+             if ($countcolumn == 21) {         #format GP
               	$rec_format = 'GP';
              }
-             elsif ($zeile[0] =~ m/^\d{2}.\d{2}.\d{4}$/ ) { #format GPMON
+             elsif ($countcolumn == 16) {      #format GPMON
                	$rec_format = 'GPMON';
+               	( $temp, $temp, $city ) = &splitcountry($zeile[15]);  #ort herauslösen aus string mit land und plz
+               	push @zeile,$city;                                    #und an array dranhängen
              }
-# TODO Leere spalten am ende auffüllen gls
+             else {      #never valid
+               	die "error due to countcolumn gls";
+             }
              push @zeile,$warehouse;                   #letzte $zeile = stockno
              for(my $i=0;$i<=$#zeile;$i++) {          #Nochmal durch alle Felder gehen und leere Werte anpassen
                  if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
@@ -491,14 +464,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
                    $zeile[$i] = "\'".$zeile[$i]."\'";
                  }
               }
-# TODO datum bei gls nach iso wandeln
-              if ($rec_format eq 'RMD') { #format RMD
-                    $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
-                    ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown11` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `time` , `unknown10` , `stockno` )
-                    VALUES
-                    ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22])";
-              }
-              elsif ($rec_format eq 'GP') {         #format GP
+              if ($rec_format eq 'GP') {         #format GP
                     $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
                     ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `unknown9` , `unknown10` , `stockno` )
                     VALUES
@@ -506,23 +472,20 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
               }
               elsif ($rec_format eq 'GPMON') { #format GPMON
                     $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
-                    ( `carrierboxno` , `date1` , `unknown1` , `unknown12` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `unknown13` , `name1` , `street` , `city2` , `shipmentno` , `stockno` )
+                    ( `carrierboxno` , `date1` , `unknown1` , `unknown12` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `unknown13` , `name1` , `street` , `city2` , `shipmentno` , `city`, `stockno` )
                     VALUES
-                    ($zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18])";
+                    ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18])";
               }
-#              $dbhandle->do($sql);
-# TODO do sql aktivieren gls
-if ($rec_format ne 'GPMON') { $sql=' ';}
-              print "\nDatei: $file Format: $rec_format Spalten: $temp SQL: ",$sql,"\n";
+              $dbhandle->do($sql);
+#              print $sql,"\n";
               $countvar++;
         }  # --- end while
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
-# TODO move2save aktivieren gls
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
-#             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
-#             move2save("$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         }
         write_log_entry("get_gls1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
@@ -678,6 +641,21 @@ sub date_switch($) {
           $date_return = "0000-00-00";            #null zurückgeben wenn übergebene länge keinen sinn macht
      }
      return $date_return;
+}
+
+###########################################
+# split string into country zipcode and city
+# sample: ( $x, $y, $z ) = &splitcountry("9999 examplecity")
+sub splitcountry($) {
+###########################################
+my $splitstring = $_[0];
+     if ( $splitstring =~ m/^[A-Z]+-/ ) {    # Landeskennzeichen vorhanden
+          $splitstring =~ m/^([A-Z]+)-(\d*)\s*(.*)$/;
+          return $1, $2, $3;
+     } else {                         # kein Landeskennzeichen
+          $splitstring =~ m/^(\d*)\s*(.*)$/;
+          return "", $1, $2;
+     }
 }
 
 ###########################################
