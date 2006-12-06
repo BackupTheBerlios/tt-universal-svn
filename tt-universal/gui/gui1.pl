@@ -11,12 +11,10 @@ use warnings;
 use DBI;
 use File::Copy;
 use lib ('../', './tt-gui/');
-
-
-
-#use Tt_global ();           #our own module for all relevant subroutines
-#use Tt_parameters ();       #our own module for global vars
 use CGI;
+use Tt_global;           #our own module for all relevant subroutines
+use Tt_parameters;       #our own module for global vars
+
 
 
 
