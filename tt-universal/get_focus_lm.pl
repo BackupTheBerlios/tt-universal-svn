@@ -10,8 +10,8 @@ use strict;
 use warnings;
 use DBI;
 use File::Copy;
-use Tt_global ();           #our own module for all relevant subroutines
-use Tt_parameters ();       #our own module for global vars
+use Tt_global;           #our own module for all relevant subroutines
+use Tt_parameters;       #our own module for global vars
 
 
 
