@@ -447,13 +447,17 @@ $debug = 1;
              if ($countcolumn == 21) {         #format GP
               	$rec_format = 'GP';
              }
-             elsif ($countcolumn == 16) {      #format GPMON
+             elsif ($countcolumn == 16 || $countcolumn == 15) {      #format GPMON
                	$rec_format = 'GPMON';
                	( $temp, $temp, $city ) = &splitcountry($zeile[15]);  #ort herauslösen aus string mit land und plz
                	push @zeile,$city;                                    #und an array dranhängen
+               	if ($countcolumn == 15) {
+                	push @zeile,'';            #shipmentno leer? dann leere spalte anfügen
+                }
              }
-             else {      #never valid
-               	die "error due to countcolumn gls";
+             else {      #not valid
+                write_log_entry("get_gls1","ERROR","SKIP line in: $INFILE_filename Number of columns: $countcolumn Not defined.","0");
+               	next;
              }
              push @zeile,$warehouse;                   #letzte $zeile = stockno
              for(my $i=0;$i<=$#zeile;$i++) {          #Nochmal durch alle Felder gehen und leere Werte anpassen
@@ -476,16 +480,16 @@ $debug = 1;
                     VALUES
                     ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18])";
               }
-              $dbhandle->do($sql);
+              $dbhandle->do($sql) or warn "\nERROR. SQL: $sql\nfile: $INFILE_filename\n";
 #              print $sql,"\n";
               $countvar++;
         }  # --- end while
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
-             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+#             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
-             move2save("$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+#             move2save("$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         }
         write_log_entry("get_gls1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
