@@ -487,9 +487,9 @@ $debug = 1;
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
-#             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
-#             move2save("$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         }
         write_log_entry("get_gls1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----

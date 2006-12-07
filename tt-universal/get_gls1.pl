@@ -8,9 +8,8 @@ my $debug = 1;              # set to 1 for debug print (for each .pl .pm separat
 
 use strict;
 use warnings;
-use lib ('D:/EasyEclipseLAMP102/workspace/tt');
+# use lib ('D:/EasyEclipseLAMP102/workspace/tt');
 use Tt_global;           #our own module for all relevant subroutines
-
 use Tt_parameters;       #our own module for global vars
 use DBI;
 use File::Copy;
