@@ -4,7 +4,7 @@
 # Robert Krauss, 2006 (rk-hannover@gmx.de)
 ###########################################
 
-my $debug = 0;              # set to 1 for debug print (for each .pl .pm separately)
+my $debug = 1;              # set to 1 for debug print (for each .pl .pm separately)
 
 use strict;
 use warnings;
@@ -21,6 +21,8 @@ use Tt_parameters;       #our own module for global vars
 $| = 1;                     # don't buffer STDOUT (for EPIC use)
 
 #=============== MAIN =====================
+print "Content-type:text/html\n\n";
+
 if ($debug) {print get_timestamp()," ScriptStart!\n"};
 
 my $STAT_DB = 's_stat';        #Name der Stat Datenbank
