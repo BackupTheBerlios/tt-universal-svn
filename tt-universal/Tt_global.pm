@@ -311,6 +311,7 @@ $debug = 1;
                   $zeile[$i] = trim($zeile[$i]);             #werte trimmen
              }      #end for
              if ($zeile[0] =~ /SADK/) {
+# TODO $datadate konstrukt prüfen
                   $datadate = substr($zeile[3],0,4)."-".substr($zeile[3],4,2)."-".substr($zeile[3],6,2); # Datum der Dateierstellung
                   $filecount = $zeile[2]; # Fortlaufende Nummerierung der Datei im Verfahren
              }
@@ -444,7 +445,7 @@ $debug = 1;
                   $zeile[$i] = trim($zeile[$i]);             #werte trimmen
              }      #end for
              # erkennen des recordformats
-             if ($countcolumn == 21) {         #format GP
+             if ($countcolumn == 21 || $countcolumn == 22) {         #format GP
               	$rec_format = 'GP';
              }
              elsif ($countcolumn == 16 || $countcolumn == 15) {      #format GPMON
@@ -459,7 +460,13 @@ $debug = 1;
                 write_log_entry("get_gls1","ERROR","SKIP line in: $INFILE_filename Number of columns: $countcolumn Not defined.","0");
                	next;
              }
-             push @zeile,$warehouse;                   #letzte $zeile = stockno
+             if ($countcolumn == 22) {         #wenn 22 spalten dann letzte spalte = stockno
+              	$zeile[22] = $warehouse;
+             }
+             else {
+                push @zeile,$warehouse;                   #sonst letzte zeile anhängen
+             }
+
              for(my $i=0;$i<=$#zeile;$i++) {          #Nochmal durch alle Felder gehen und leere Werte anpassen
                  if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
                    $zeile[$i] = 'DEFAULT';
@@ -470,7 +477,7 @@ $debug = 1;
               }
               if ($rec_format eq 'GP') {         #format GP
                     $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME`
-                    ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `custno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `unknown9` , `unknown10` , `stockno` )
+                    ( `carrierboxno` , `date1` , `unknown1` , `unknown2` , `unknown3` , `unknown4` , `unknown5` , `date2` , `countrycode` , `zipcode` , `unknown6` , `unknown7` , `shipmentno` , `name1` , `name2` , `name3` , `street` , `city` , `unknown8` , `zipcode2` , `unknown9` , `unknown10` , `stockno` )
                     VALUES
                     ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22])";
               }
