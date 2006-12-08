@@ -145,10 +145,10 @@ CREATE TABLE `gls_gepard1` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `nightstar1_out`
+-- Tabellenstruktur für Tabelle `nightplus1_out`
 --
 
-CREATE TABLE `nightstar1_out` (
+CREATE TABLE `nightplus1_out` (
   `carrierrefno` varchar(30) collate latin1_general_ci NOT NULL default '',
   `carrierboxno` varchar(30) collate latin1_general_ci NOT NULL default '',
   `custno` int(10) unsigned NOT NULL default '0',
@@ -185,15 +185,14 @@ CREATE TABLE `nightstar1_out` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `nightstar1_in`
+-- Tabellenstruktur für Tabelle `nightplus1_in`
 --
 
-CREATE TABLE `nightstar1_in` (
-  `carrierrefno` varchar(30) collate latin1_general_ci NOT NULL default '',
-  `custno` int(10) unsigned NOT NULL default '0',
+CREATE TABLE `nightplus1_in` (
+  `returncode` varchar(100) NOT NULL default '',
+  `errorcode` varchar(4) NOT NULL default '',
   `date1` datetime NOT NULL default '0000-00-00 00:00:00',
-  `value1` varchar(14) collate latin1_general_ci NOT NULL default '',
   `stockno` int(10) unsigned NOT NULL default '0',
-  PRIMARY KEY  (`carrierrefno`,`date1`,`stockno`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+  PRIMARY KEY  (`returncode`,`date1`,`stockno`)
+) TYPE=MyISAM;
 
