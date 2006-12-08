@@ -88,7 +88,7 @@ CREATE TABLE `dhl_easylog1` (
   `carrierboxno` varchar(35) collate latin1_general_ci NOT NULL default '',
   `routingcode` varchar(35) collate latin1_general_ci default NULL,
   `servicecode` varchar(35) collate latin1_general_ci default NULL,
-  `shipmentno` varchar(40) collate latin1_general_ci default NULL,
+  `shipmentno` int(11) unsigned NOT NULL default '0',
   `name1` varchar(60) collate latin1_general_ci NOT NULL default '',
   `name2` varchar(60) collate latin1_general_ci default NULL,
   `name3` varchar(60) collate latin1_general_ci default NULL,
