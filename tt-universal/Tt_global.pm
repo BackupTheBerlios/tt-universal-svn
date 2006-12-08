@@ -177,11 +177,18 @@ $zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],
 }
 
 ###########################################
-sub move2save($$$) {
+sub move2save($$$;$) {
 ###########################################
+     my $warehouse;
      my $from_dir = $_[0];
      my $to_dir = $_[1];
      my $file = $_[2];
+     if (defined $_[3]) {
+         $warehouse = $_[3];
+     }
+     else {
+         $warehouse = '000';
+     }
      my $timestamp = get_timestamp();
      my $mon2 = substr($timestamp,4,2);
      my $year2 = substr($timestamp,0,4);
@@ -201,12 +208,9 @@ sub move2save($$$) {
      mkdir "$to_dir/$year2/$mon2", 0777 or die "mkdir $to_dir/$year2/$mon2 not possibe! $!\n";
      }
 
-#     print "Von: $from_dir \nNach: $to_dir/$year2/$mon2 \nFilename im SUB: $file \nMonat: $mon2 Jahr: $year2 \n";
-     move("$from_dir/$file","$to_dir/$year2/$mon2/$file\.$timestamp\.done") or die "move not possible! $!\n";
+#     print "Von: $from_dir \nNach: $to_dir/$year2/$mon2 \nFilename im SUB: $file \nMonat: $mon2 Jahr: $year2 Lager: $warehouse\n";
+     move("$from_dir/$file","$to_dir/$year2/$mon2/$file\.$timestamp\.$warehouse\.done") or die "move not possible! $!\n";
 }
-
-
-1;
 
 ###########################################
 sub get_timestamp(;$) {
@@ -311,7 +315,6 @@ $debug = 1;
                   $zeile[$i] = trim($zeile[$i]);             #werte trimmen
              }      #end for
              if ($zeile[0] =~ /SADK/) {
-# TODO $datadate konstrukt prüfen
                   $datadate = substr($zeile[3],0,4)."-".substr($zeile[3],4,2)."-".substr($zeile[3],6,2); # Datum der Dateierstellung
                   $filecount = $zeile[2]; # Fortlaufende Nummerierung der Datei im Verfahren
              }
@@ -338,6 +341,12 @@ $debug = 1;
              if ($#zeile == 21 ) {                     #nur 22 spalten? Dann ansprechpartner hinzufügen
                	push @zeile,'';                        #zeile[22] = dummy
                	push @zeile,'';                        #zeile[23] = dummy
+             }                #elsif für linux, da hier die letzte spalte mitgezählt wird
+             elsif ($#zeile == 22 ) {                     #nur 23 spalten? Dann ansprechpartner hinzufügen
+               	push @zeile,'';                        #zeile[22] = dummy
+             }
+             elsif ($#zeile == 24 ) {
+               	pop @zeile;                        #24 spalten? dann eine wegnehmen
              }
              push @zeile,$datadate;                        #zeile[24] = datum
              push @zeile,$warehouse;                       #zeile[25] = stockno
@@ -355,16 +364,16 @@ $debug = 1;
                   VALUES
                   ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25])";
                   $dbhandle->do($sql);
-#                    print $sql,"\n";
+#                  print $sql,"\n";
                   $countvar++;
              }  # --- end if
         }  # --- end while
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
-             move2save("$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
-             move2save("$STAT_STARTDIR/$DHL_EASY2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$DHL_EASY2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
         }
         write_log_entry("get_dhl1","INFO","FILENAME:$file VERFAHREN:$filetreatment LFD-NUMMER:$filecount","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
@@ -494,9 +503,9 @@ $debug = 1;
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
-             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$GLS_GEP1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
-             move2save("$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$GLS_GEP2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
         }
         write_log_entry("get_gls1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
@@ -524,6 +533,7 @@ $debug = 1;
      my $datadate;
      my $rec_format;
      my $temp;
+     my $countcolumn;
 
 
      #get filelist
@@ -570,36 +580,39 @@ $debug = 1;
              next if m/^trunc/;       # truncatingzeilen ignorieren
              chomp;                   # zeilenvorschub raus
              undef @zeile;            # var leeren für neuen durchgang
-             push @zeile, substr ($_,0,19);     #carrierrefno
-             push @zeile, substr ($_,19,8);     #carrierboxno
-             push @zeile, substr ($_,27,7);     #custno
-             push @zeile, substr ($_,34,30);     #name1
-             push @zeile, substr ($_,64,30);     #name2
-             push @zeile, substr ($_,94,30);     #street
-             push @zeile, substr ($_,124,8);     #zipcode
-             push @zeile, substr ($_,132,30);     #city
-             push @zeile, substr ($_,162,5);     #deliver_until
-             push @zeile, date_switch(substr ($_,167,8));     #shipdate gewandelt nach iso
-             push @zeile, substr ($_,175,2);     #parcelcount1
-             push @zeile, substr ($_,177,2);     #parcelcount2
-             push @zeile, substr ($_,179,6);     #weight
-             push @zeile, substr ($_,185,6);     #shipmentno
-             push @zeile, substr ($_,191,30);     #sender1
-             push @zeile, substr ($_,221,8);     #sender2
-             push @zeile, substr ($_,229,30);     #sender3
-             push @zeile, substr ($_,259,20);     #content
-             push @zeile, substr ($_,279,10);     #atg
-             push @zeile, substr ($_,289,10);     #ast
-             push @zeile, substr ($_,299,15);     #shipment
-             push @zeile, substr ($_,314,20);     #dispatch
-             push @zeile, substr ($_,334,15);     #labeltext
-             push @zeile, substr ($_,349,20);     #freight_terms
-             push @zeile, substr ($_,369,30);     #end_customer1
-             push @zeile, substr ($_,399,30);     #end_customer2
-             push @zeile, substr ($_,429,30);     #end_customer3
-             push @zeile, substr ($_,459,8);     #end_customer4
-             push @zeile, substr ($_,467,30);     #end_customer5
-             push @zeile, substr ($_,8,3);       #stockno
+#             push @zeile, substr ($_,0,19);     #carrierrefno
+#             push @zeile, substr ($_,19,8);     #carrierboxno
+#             push @zeile, substr ($_,27,7);     #custno
+#             push @zeile, substr ($_,34,30);     #name1
+#             push @zeile, substr ($_,64,30);     #name2
+#             push @zeile, substr ($_,94,30);     #street
+#             push @zeile, substr ($_,124,8);     #zipcode
+#             push @zeile, substr ($_,132,30);     #city
+#             push @zeile, substr ($_,162,5);     #deliver_until
+#             push @zeile, date_switch(substr ($_,167,8));     #shipdate gewandelt nach iso
+#             push @zeile, substr ($_,175,2);     #parcelcount1
+#             push @zeile, substr ($_,177,2);     #parcelcount2
+#             push @zeile, substr ($_,179,6);     #weight
+#             push @zeile, substr ($_,185,6);     #shipmentno
+#             push @zeile, substr ($_,191,30);     #sender1
+#             push @zeile, substr ($_,221,8);     #sender2
+#             push @zeile, substr ($_,229,30);     #sender3
+#             push @zeile, substr ($_,259,20);     #content
+#             push @zeile, substr ($_,279,10);     #atg
+#             push @zeile, substr ($_,289,10);     #ast
+#             push @zeile, substr ($_,299,15);     #shipment
+#             push @zeile, substr ($_,314,20);     #dispatch
+#             push @zeile, substr ($_,334,15);     #labeltext
+#             push @zeile, substr ($_,349,20);     #freight_terms
+#             push @zeile, substr ($_,369,30);     #end_customer1
+#             push @zeile, substr ($_,399,30);     #end_customer2
+#             push @zeile, substr ($_,429,30);     #end_customer3
+#             push @zeile, substr ($_,459,8);     #end_customer4
+#             push @zeile, substr ($_,467,30);     #end_customer5
+#             push @zeile, substr ($_,8,3);       #stockno
+             @zeile = split (/;/);   # am semikolon auftrennen
+             $countcolumn = $#zeile;  # anzahl der arrayelemente aufheben
+
 if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufheben
              for (my $i=0;$i<=$#zeile;$i++) {
                  $zeile[$i] = trim($zeile[$i]);             #werte trimmen
@@ -611,9 +624,14 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
                  }
               }
               $sql = "INSERT IGNORE INTO `$NIGHT1_OUT_TABLENAME`
-              (`carrierrefno`,`carrierboxno`,`custno`,`name1`,`name2`,`street`,`zipcode`,`city`,`deliver_until`,`shipdate`,`parcelcount1`,`parcelcount2`,`weight`,`shipmentno`,`sender1`,`sender2`,`sender3`,`content`,`atg`,`ast`,`shipment`,`dispatch`,`labeltext`,`freight_terms`,`end_customer1`,`end_customer2`,`end_customer3`,`end_customer4`,`end_customer5`,`stockno`)
+              (`carrierboxno` , `lgmboxno` , `custno` , `servicetime` , `shipdate` , `rowpos` , `parcelcount` , `weight` , `shipmentno` , `stockno`)
               VALUES
-              ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25],$zeile[26],$zeile[27],$zeile[28],$zeile[29])";
+              ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9])";
+
+#              $sql = "INSERT IGNORE INTO `$NIGHT1_OUT_TABLENAME`
+#              (`carrierrefno`,`carrierboxno`,`custno`,`name1`,`name2`,`street`,`zipcode`,`city`,`deliver_until`,`shipdate`,`parcelcount1`,`parcelcount2`,`weight`,`shipmentno`,`sender1`,`sender2`,`sender3`,`content`,`atg`,`ast`,`shipment`,`dispatch`,`labeltext`,`freight_terms`,`end_customer1`,`end_customer2`,`end_customer3`,`end_customer4`,`end_customer5`,`stockno`)
+#              VALUES
+#              ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25],$zeile[26],$zeile[27],$zeile[28],$zeile[29])";
               $dbhandle->do($sql);
 #               print "SQL: ",$sql,"\n";
               $countvar++;
@@ -621,9 +639,9 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
-             move2save("$STAT_STARTDIR/$NIGHT1_OUT_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$NIGHT1_OUT_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
-             move2save("$STAT_STARTDIR/$NIGHT2_OUT_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+             move2save("$STAT_STARTDIR/$NIGHT2_OUT_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
         }
         write_log_entry("get_nightstar_send1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
@@ -667,6 +685,111 @@ my $splitstring = $_[0];
           $splitstring =~ m/^(\d*)\s*(.*)$/;
           return "", $1, $2;
      }
+}
+
+###########################################
+# get all data from nightstar that are sent
+sub get_nightstar_receive1($) {
+###########################################
+$debug = 1;
+     if ($debug) {print "Debug Start get_nightstar_receive1\n"};
+     my $warehouse = $_[0];        #erster parameter = warehouse / stockno
+     if ($debug) {print "Debug $warehouse\n"};
+
+     my $countvar = 0;
+     my $filelist;
+     my	$INFILE_filename;
+     my @zeile;
+     my $datadate;
+     my $rec_format;
+     my $temp;
+
+#TODO format anpassen wg. lieferscheinnummer?
+     #get filelist
+     if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+          opendir (DIR,"$STAT_STARTDIR/$NIGHT1_IN_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$NIGHT1_IN_IMPORTDIR not possible: $!";
+          if ($debug) {print "$STAT_STARTDIR/$NIGHT1_IN_IMPORTDIR\n"};
+          @filelist = grep { -f "$STAT_STARTDIR/$NIGHT1_IN_IMPORTDIR/$_" } readdir(DIR);
+          if ($debug) {print @filelist,"\n"};
+          closedir DIR;
+     }
+     if ( $warehouse eq '210' ) {                        #pfad für stockno 210
+          opendir (DIR,"$STAT_STARTDIR/$NIGHT2_IN_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$NIGHT2_IN_IMPORTDIR not possible: $!";
+          if ($debug) {print "$STAT_STARTDIR/$NIGHT2_IN_IMPORTDIR\n"};
+          @filelist = grep { -f "$STAT_STARTDIR/$NIGHT2_IN_IMPORTDIR/$_" } readdir(DIR);
+          if ($debug) {print @filelist,"\n"};
+          closedir DIR;
+     }
+
+     #create logfile entry
+     write_log_entry("get_nightstar_receive1","INFO","READ START STOCKNO $warehouse","");
+
+     if (@filelist lt 1 )
+     {
+	    # return early from subdir if dir empty and nothing to do
+        write_log_entry("get_nightstar_receive1","INFO","READ STOP Nothing to do","0");
+        if ($debug) {print @filelist,"\n"};
+        if ($debug) {print "Debug NOTHING TO DO\n"};
+	    return;
+     }
+
+     #open connection to log and data db
+     my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+
+     #process each file found
+     foreach my $file ( @filelist ) {
+        if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+             $INFILE_filename = "$STAT_STARTDIR/$NIGHT1_IN_IMPORTDIR/$file"; # input file name
+        } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
+             $INFILE_filename = "$STAT_STARTDIR/$NIGHT2_IN_IMPORTDIR/$file"; # input file name
+        }
+        open ( INFILE, '<', $INFILE_filename ) or die  "$0 : failed to open input file $INFILE_filename : $!\n";
+        while (<INFILE>){
+             next if m/^\s*$/;        # Leerzeilen ignorieren
+             next if m/^trunc/;       # truncatingzeilen ignorieren
+             chomp;                   # zeilenvorschub raus
+             undef @zeile;            # var leeren für neuen durchgang
+             push @zeile, substr ($_,0,35);     #returncode
+             push @zeile, substr ($_,35,3);     #errorcode
+             push @zeile, date_switch(substr ($_,38,8));     #date1-date
+             push @zeile, substr ($_,46,8);     #date1-time
+             $zeile[3] =~ s/   /00:/;       #von mitternacht bis 1 fehlen die stunden
+             $zeile[2] =~ tr/ /0/;          #leerzeichen in datestring zu 0 ersetzen
+             $zeile[3] =~ tr/ /0/;          #leerzeichen in timestring zu 0 ersetzen
+             $zeile[2] = $zeile[2]." ".$zeile[3]; #formatieren als timestring
+             $zeile[3] = substr ($_,6,3);       #lager aus der paketnummer extrahieren
+             for (my $i=0;$i<=$#zeile;$i++) {
+                 $zeile[$i] = trim($zeile[$i]);             #werte trimmen
+                 if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
+                   $zeile[$i] = 'DEFAULT';
+                 } else { #was drin? dann verpacken
+                   $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
+                   $zeile[$i] = "\'".$zeile[$i]."\'";
+                 }
+              }
+              $sql = "INSERT IGNORE INTO `$NIGHT1_IN_TABLENAME`
+              (`returncode`,`errorcode`,`date1`,`stockno`)
+              VALUES
+              ($zeile[0],$zeile[1],$zeile[2],$zeile[3])";
+              $dbhandle->do($sql);
+#               print "SQL: ",$sql,"\n";
+              $countvar++;
+        }  # --- end while
+        close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
+        #move file to save-dir
+        if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+             move2save("$STAT_STARTDIR/$NIGHT1_IN_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
+             move2save("$STAT_STARTDIR/$NIGHT2_IN_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        }
+        write_log_entry("get_nightstar_receive1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
+     } # -----  end foreach  -----
+
+     #create logfile entry
+     write_log_entry("get_nightstar_receive1","INFO","READ END","$countvar");
+
+     if ($debug) {print "Debug Ende get_nightstar_receive1\n"};
+     return 1;
 }
 
 ###########################################
