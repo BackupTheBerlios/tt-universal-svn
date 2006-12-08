@@ -150,7 +150,7 @@ CREATE TABLE `gls_gepard1` (
 
 CREATE TABLE `nightplus1_out` (
  `carrierboxno` varchar(30) collate latin1_general_ci NOT NULL default '',
- `lmboxno` int(10) unsigned default NULL,
+ `lgmboxno` int(10) unsigned default NULL,
  `custno` int(10) unsigned NOT NULL,
  `servicetime` varchar(30) collate latin1_general_ci NOT NULL default '',
  `shipdate` datetime NOT NULL default '0000-00-00 00:00:00',
