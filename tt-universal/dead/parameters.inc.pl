@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 ###########################################
 # parameters.inc.pl -- Parameter Datei für Perl Scripte
-# Robert Krauss, 2006 (rk-hannover@gmx.de)
+# Robert Krauss, 2006 (rk-hannover@gmx.de )
 ###########################################
 use strict;
 use vars qw(
