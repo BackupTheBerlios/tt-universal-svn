@@ -106,7 +106,7 @@ sub get_focus {
 
      #create logfile entry
      write_log_entry("get_focus","INFO","READ END","$countvar");
-
+  print "$file\n";
      if ($debug) {print "Debug Ende get_focus\n"};
 }
 
@@ -156,11 +156,8 @@ sub get_lm1 {
                     $zeile[$i] = "\'".$zeile[$i]."\'";
                   }
              }
-             my $sql =
-"INSERT IGNORE INTO `$LM1_TABLENAME` ( `stockno` , `custno` , `picklistno` , `shipmentno` , `picklistrowpos` , `rec_date` , `ack_date` , `carrier` , `lmboxno` , `carrierboxno` )
-VALUES (
-$zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9]
-)";
+             my $sql = "INSERT IGNORE INTO `$LM1_TABLENAME` ( `stockno` , `custno` , `picklistno` , `shipmentno` , `picklistrowpos` , `rec_date` , `ack_date` , `carrier` , `lmboxno` , `carrierboxno` )
+VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9])";
              $dbhandle->do($sql) or warn "do sql error:\n$sql\nDBI Error: $DBI::errstr";
              $countvar++;
              }
