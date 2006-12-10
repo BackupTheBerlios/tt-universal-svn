@@ -12,9 +12,9 @@ $STAT_DB_PASS = '';        #passwort für zugriff auf DB
 $LOG_TABLE = 'import_log'; #name der logging tabelle
 
 # $STAT_STARTDIR = 'C:/down/spicers';                                      #wo liegen die daten der anwendung
-$STAT_STARTDIR = 'C:/Down/gls';
+# $STAT_STARTDIR = 'C:/Down/gls';
 # $STAT_STARTDIR = '//gringots/netzdaten/win_data/projekte/spicers';    #wo liegen die daten der anwendung
-# $STAT_STARTDIR = 'D:\down\spicers-down';
+$STAT_STARTDIR = 'D:\down\spicers-down';
 $STAT_SAVEDIR = 'save';                                               #wo werden die eingelesenen files abgelegt
 
 $FOC_IMPORTDIR = 'daten-focus';                                       #wo liegen die focus daten
