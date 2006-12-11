@@ -58,11 +58,13 @@ sub showsearchform () {
          my $partno = $form->field('partno');          #wenn in partno was steht
          if (length($partno) > 1) {
               $countvar++;                             #dann nur um eins erhöhen
+              $partno =~ tr/x/X/;                      #nur grosses X
          }
          if ($countvar gt 1 ) {                         #mehr als 1? alles gut
               print $form->confirm(header => 0);
               print "Und weiter gehts!<br />\n";
               #TODO run_search aufrufen, anzahl der übergabewerte einstellen
+              run_search($custno,$cono,$shipmentno,$partno);
          }
          elsif ($countvar == 1) {                       #nur valid wenn alles ausser partno leer ist
               $form->field(name => 'partno', invalid => 1);
@@ -81,18 +83,49 @@ sub showsearchform () {
      }
 }
 
-sub run_search($) {      # TODO anpassen übergabeparameter sql run_search
-     my $custno = $_[0];      #suche mit custno
+sub run_search($$$$) {      # TODO anpassen übergabeparameter sql run_search
+     my $custno = $_[0];      #suchvars übergeben
+     my $cono = $_[1];
+     my $shipmentno = $_[2];
+     my $partno = $_[3];
      my $dbh = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+     my $countvar = 0;
+
 #     my $select1 = "select distinct b.carrier, b.lmboxno, b.picklistno, b.shipmentno, b.custno
 #     from lm1_data b where b.custno = $custno
 #     order by b.picklistno ";
      my $select1 = "select distinct b.carrier, b.lmboxno, b.picklistno, b.shipmentno, b.custno
      from lm1_data b where b.picklistno in (SELECT distinct a.picklistno
-     FROM focus_data a where a.custno = $custno and a.status=2)
-     order by b.picklistno ";
+     FROM focus_data a where ";
+     if (length($custno) > 1) {
+         $select1 .= "a\.custno = '$custno'";       #where klausel anhängen
+         $countvar++;                             #dann zähler um eins erhöhen
+     }
+     if (length($cono) > 1) {
+         if ($countvar ge 1 ) {
+	         $select1 .= " and ";
+         }
+         $select1 .= "a\.cono = '$cono'";       #where klausel anhängen
+         $countvar++;                             #dann zähler um eins erhöhen
+     }
+     if (length($shipmentno) > 1) {
+         if ($countvar ge 1 ) {
+	         $select1 .= " and ";
+         }
+         $select1 .= "a\.shipmentno = '$shipmentno'";       #where klausel anhängen
+         $countvar++;                             #dann zähler um eins erhöhen
+     }
+     if (length($partno) > 1) {
+         if ($countvar ge 1 ) {
+	         $select1 .= " and ";
+         }
+         $select1 .= "a\.partno = '$partno'";       #where klausel anhängen
+         $countvar++;                             #dann zähler um eins erhöhen
+     }
+     $select1 .= " and a.status=2) order by b.picklistno ";
      my $sth = $dbh->prepare($select1);
      $sth->execute();
+# print "<br />SQL: $select1 <br />";
      if ($sth->fetchrow_array ) {                 #wenn was gefunden wurde
           showtable_level1 ($sth);
           print "<a href='searchdata.pl?level=start>zur&uuml;ck</a>";
