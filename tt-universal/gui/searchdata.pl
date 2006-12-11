@@ -1,7 +1,9 @@
+#!/usr/bin/perl
 my $debug = 1;              # set to 1 for debug print (for each .pl .pm separately)
 
 use strict;
 use warnings;
+use lib ('/spicers/scripts/perl');
 use DBI;
 use File::Copy;
 use CGI qw(:all);
@@ -30,10 +32,9 @@ if ($level eq 'start') {
     # Suchformular ausgeben
     showsearchform ();
 }
-elsif ($level eq 'run_search') {
-#    print "Abfrage läuft, bitte warten.<br />";
-    run_search($q->param('custno'));
-}
+#elsif ($level eq 'run_search') {
+#    run_search($q->param('custno'));
+#}
 elsif ($level eq 'get_by_carrier') {
     get_by_carrier( $q->param('carrier') );
 }
