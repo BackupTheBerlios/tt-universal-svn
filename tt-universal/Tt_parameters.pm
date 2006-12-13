@@ -13,10 +13,10 @@ $STAT_DB_PASS = '';        #passwort für zugriff auf DB
 $LOG_TABLE = 'import_log'; #name der logging tabelle
 
 # $STAT_STARTDIR = 'C:/down/spicers';                                      #wo liegen die daten der anwendung
-# $STAT_STARTDIR = 'C:/Down/gls';
+$STAT_STARTDIR = 'C:/Down/gls';
 # $STAT_STARTDIR = '//gringots/netzdaten/win_data/projekte/spicers';    #wo liegen die daten der anwendung
 # $STAT_STARTDIR = '/spicers/trackandtrace';
-$STAT_STARTDIR = 'D:\down\spicers-down';
+# $STAT_STARTDIR = 'D:\down\spicers-down';
 $STAT_SAVEDIR = 'save';                                               #wo werden die eingelesenen files abgelegt
 
 $FOC_IMPORTDIR = 'daten-focus';                                       #wo liegen die focus daten
@@ -40,6 +40,12 @@ $NIGHT1_IN_TABLENAME = 'nightstar1_in';
 $NIGHT1_OUT_IMPORTDIR = 'nightstar160/send';                          #wo liegen die nightstar daten 160
 $NIGHT2_OUT_IMPORTDIR = 'nightstar210/send';                          #wo liegen die nightstar daten
 $NIGHT1_OUT_TABLENAME = 'nightstar1_out';
+
+$GLS_PARCEL1_IMPORTDIR = 'glsparcel160';                              #wo liegen die kdpaket.dat files für stockno 160
+$GLS_PARCEL2_IMPORTDIR = 'glsparcel210';                              #wo liegen die kdpaket.dat files für stockno 210
+$GLS_PARCEL1_EXPORTDIR = 'glsparcel160/out';                          #wo liegen die kdpaket.dat files von stockno 160
+$GLS_PARCEL2_EXPORTDIR = 'glsparcel210/out';                          #wo liegen die kdpaket.dat files von stockno 210
+$GLS_GEP1_TABLENAME = 'gls_parcel_out';
 
 ###########################################
 # END of module
