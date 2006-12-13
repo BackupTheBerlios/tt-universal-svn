@@ -200,3 +200,34 @@ CREATE TABLE `nightstar1_out` (
   `stockno` int(10) unsigned NOT NULL default '0',
   PRIMARY KEY  (`stockno`,`shipdate`,`carrierboxno`,`shipmentno`)
 ) TYPE=MyISAM;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `gls_parcel_out`
+--
+
+CREATE TABLE `gls_parcel_out` (
+  `carrierboxno` VARCHAR(12) NOT NULL DEFAULT '0',
+  `shipdate` date NOT NULL,
+  `gls_custno` int(10) NOT NULL default '0',
+  `weight` int(10) default NULL,
+  `gls_product` varchar(50) NOT NULL default ' ',
+  `gls_epl_number` varchar(5) NOT NULL,
+  `tournumber` int(10) NOT NULL default '0',
+  `checkdate` date NOT NULL,
+  `country` varchar(3) NOT NULL,
+  `zipcode` varchar(6) NOT NULL,
+  `freight_terms` int(10) NOT NULL default '0',
+  `gls_trunc` int(10) NOT NULL default '0',
+  `custno` int(10) NOT NULL default '0',
+  `name` varchar(40) NOT NULL,
+  `street` varchar(40) NOT NULL,
+  `city` varchar(40) NOT NULL,
+  `shipmentno` int(10) NOT NULL default '0',
+  `stockno` int(3) NOT NULL,
+  `checkin_date` date default NULL,
+  `checkout_date` date default NULL,
+  `status` int(2) default NULL,
+  PRIMARY KEY  (`carrierboxno`,`shipdate`,`stockno`)
+) TYPE=MyISAM;
