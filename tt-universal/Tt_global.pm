@@ -790,6 +790,121 @@ $debug = 1;
 }
 
 ###########################################
+# get all data from gls kdpaket.dat file
+sub process_glsfile1($) {
+###########################################
+$debug = 1;
+     if ($debug) {print "Debug process_glsfile1\n"};
+     my $warehouse = $_[0];        #erster parameter = warehouse / stockno
+     if ($debug) {print "Debug $warehouse\n"};
+
+     my $countvar = 0;
+     my $filelist;
+     my	$INFILE_filename;
+     my @zeile;
+     my $datadate;
+     my $rec_format;
+     my $temp;
+     my $countcolumn;
+
+
+     #get filelist
+     if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+          opendir (DIR,"$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR not possible: $!";
+          if ($debug) {print "$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR\n"};
+          @filelist = grep { -f "$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR/$_" } readdir(DIR);
+          if ($debug) {print @filelist,"\n"};
+          closedir DIR;
+     }
+     if ( $warehouse eq '210' ) {                        #pfad für stockno 210
+          opendir (DIR,"$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR not possible: $!";
+          if ($debug) {print "$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR\n"};
+          @filelist = grep { -f "$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR/$_" } readdir(DIR);
+          if ($debug) {print @filelist,"\n"};
+          closedir DIR;
+     }
+
+     #create logfile entry
+     write_log_entry("process_glsfile1","INFO","READ START STOCKNO $warehouse","");
+
+     if (@filelist lt 1 )
+     {
+	    # return early from subdir if dir empty and nothing to do
+        write_log_entry("process_glsfile1","INFO","READ STOP Nothing to do","0");
+        if ($debug) {print @filelist,"\n"};
+        if ($debug) {print "Debug NOTHING TO DO\n"};
+	    return;
+     }
+
+     #open connection to log and data db
+     my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+
+     #process each file found
+     foreach my $file ( @filelist ) {
+        if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+             $INFILE_filename = "$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR/$file"; # input file name
+        } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
+             $INFILE_filename = "$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR/$file"; # input file name
+        }
+        open ( INFILE, '<', $INFILE_filename ) or die  "$0 : failed to open input file $INFILE_filename : $!\n";
+        while (<INFILE>){
+             next if m/^\s*$/;        # Leerzeilen ignorieren
+             next if m/^#/;       # truncatingzeilen ignorieren
+             chomp;                   # zeilenvorschub raus
+             undef @zeile;            # var leeren für neuen durchgang
+             @zeile = split (/\|/);   # am pipe auftrennen
+             $countcolumn = $#zeile;  # anzahl der arrayelemente aufheben
+
+if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufheben
+             for (my $i=0;$i<=$#zeile;$i++) {
+                 $zeile[$i] = trim($zeile[$i]);             #werte trimmen
+                 if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
+                   $zeile[$i] = 'DEFAULT';
+                 } else { #was drin? dann verpacken
+                   $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
+                   $zeile[$i] = "\'".$zeile[$i]."\'";
+                 }
+             }
+             if ($countcolumn == 16) {         #wenn 16 spalten dann letzte spalte = stockno
+                 $zeile[17] = $warehouse;
+             }
+             elsif ($countcolumn == 15) {
+               push @zeile,'';                           #sonst leere spalte anhängen
+               push @zeile,$warehouse;                   #und dann stockno
+             }
+             elsif ($countcolumn == 17) {
+               $temp = pop (@zeile);                           #sonst 1 spaltelöschen, ggf. linux
+               push @zeile,$warehouse;                   #und dann stockno
+             }
+# TODO gls_parcel insert IGNORE ist richtig?
+              $sql = "INSERT IGNORE INTO `gls_parcel_out` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`)
+                       VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17])";
+# TODO aktivieren sql gls_parcel
+              $dbhandle->do($sql);
+#               print "SQL: ",$sql,"\n";
+              $countvar++;
+# if ($countvar == 3 ) {exit;}     #für debugzwecke
+        }  # --- end while
+        close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
+        #move file to save-dir
+# TODO aktivieren move2save gls_parcel
+        if ( $warehouse eq '160' ) {                        #pfad für stockno 160
+#             move2save("$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
+        } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
+#             move2save("$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
+        }
+        write_log_entry("process_glsfile1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
+     } # -----  end foreach  -----
+
+     #create logfile entry
+     write_log_entry("process_glsfile1","INFO","READ END","$countvar");
+
+     if ($debug) {print "Debug Ende process_glsfile1\n"};
+     return 1;
+}
+
+
+###########################################
 # END of module
 ###########################################
 1;
