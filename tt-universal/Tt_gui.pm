@@ -126,6 +126,7 @@ sub run_search($$$$) {      # TODO anpassen übergabeparameter sql run_search
      my $sth = $dbh->prepare($select1);
      $sth->execute();
 # print "<br />SQL: $select1 <br />";
+# TODO wenn im array was gefunden
      if ($sth->fetchrow_array ) {                 #wenn was gefunden wurde
           showtable_level1 ($sth);
           print "<a href='searchdata.pl?level=start>zur&uuml;ck</a>";

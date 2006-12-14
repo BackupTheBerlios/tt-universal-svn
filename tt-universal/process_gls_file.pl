@@ -17,6 +17,15 @@ use Net::FTP;
 
 # http://www.tekromancer.com/perl2/12_1.html
 
+my $STAT_DB = 's_stat';        #Name der Stat Datenbank
+my $DB_HOST = 'localhost';		#Rechnername auf dem die MySQL DB liegt
+my $DB_TYPE = 'DBI:mysql:'.$STAT_DB.':'.$DB_HOST;	#DBI Zugriffsparameter für mysql
+
+my $STAT_DB_USER = 'root';    #Username für zugriff auf DB
+my $STAT_DB_PASS = '';        #passwort für zugriff auf DB
+
+
+
 
 $| = 1;                     # don't buffer STDOUT (for EPIC use)
 

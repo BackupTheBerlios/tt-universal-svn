@@ -876,9 +876,19 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
                $temp = pop (@zeile);                           #sonst 1 spaltelöschen, ggf. linux
                push @zeile,$warehouse;                   #und dann stockno
              }
+             if (not(search_db("dhl_easylog1","$warehouse","shipmentno","$zeile[17]")) && not(search_db("dhl_nightplus1_out","$warehouse","shipmentno","$zeile[17]")) ) {  #lieferschein nicht gefunden in dhl oder nightplus
+                  push @zeile, get_timestamp();          #checkin_date = jetzt
+                  push @zeile, '';                       #checkout_date = nix
+                  push @zeile, '0';                      #status = 0 (false)
+             }
+             else {
+                  push @zeile, get_timestamp();          #checkin_date = jetzt
+                  push @zeile, '';                       #checkout_date = nix
+                  push @zeile, '1';                      #status = 1 (true)
+             }
 # TODO gls_parcel insert IGNORE ist richtig?
-              $sql = "INSERT IGNORE INTO `gls_parcel_out` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`)
-                       VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17])";
+              $sql = "INSERT IGNORE INTO `gls_parcel_out` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`, `checkin_date`, `checkout_date`, `status`)
+                       VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20])";
 # TODO aktivieren sql gls_parcel
               $dbhandle->do($sql);
 #               print "SQL: ",$sql,"\n";
@@ -903,6 +913,32 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
      return 1;
 }
 
+###########################################
+# find any data in given db and row
+sub search_db($$$$) {
+###########################################
+    my $table = $_[0];
+    my $warehouse = $_[1];
+    my $search_field = $_[2];
+    my $search_value = $_[3];
+    my $retval;
+    my $search_dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection in search_db not made: $DBI::errstr";
+
+    my $select1 = "select * from $table where `stockno` = $warehouse and `$search_field` = '$search_value'";
+    my $sth = $search_dbhandle->prepare($select1);
+# print "Select1: $select1\n";
+    $sth->execute();
+     if ($sth->fetchrow_array ) {                 #wenn was gefunden wurde
+          $retval = "1";
+# print "Select1: if erfuellt\n";
+     }
+     else {                                       #wenn die Abfrage ohne Ergebnis blieb
+          $retval = "0";
+# print "Select1: else erfuellt\n";
+     }
+     $search_dbhandle->disconnect();
+     return $retval;
+}
 
 ###########################################
 # END of module

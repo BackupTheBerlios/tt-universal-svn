@@ -77,7 +77,7 @@ CREATE TABLE `focus_data` (
 CREATE TABLE `gls_gepard1` (
   `date1` datetime NOT NULL default '0000-00-00 00:00:00',
   `date2` datetime NOT NULL default '0000-00-00 00:00:00',
-  `custno` int(10) unsigned NOT NULL,
+  `custno` int(10) unsigned NOT NULL default '0',
   `carrierboxno` varchar(35) NOT NULL default '',
   `shipmentno` varchar(40) NOT NULL default '',
   `name1` varchar(60) NOT NULL default '',
@@ -113,11 +113,11 @@ CREATE TABLE `gls_gepard1` (
 --
 
 CREATE TABLE `import_log` (
-  `count` bigint(20) unsigned NOT NULL,
-  `source` varchar(60) NOT NULL,
-  `category` varchar(5) NOT NULL,
-  `logtime` datetime NOT NULL,
-  `remark` varchar(100) NOT NULL,
+  `count` bigint(20) unsigned NOT NULL auto_increment,
+  `source` varchar(60) NOT NULL default '',
+  `category` varchar(5) NOT NULL default '',
+  `logtime` datetime NOT NULL default '0000-00-00 00:00:00',
+  `remark` varchar(255) NOT NULL default '',
   `lines_read` bigint(20) unsigned NOT NULL default '0',
   PRIMARY KEY  (`count`)
 ) TYPE=MyISAM;
@@ -129,11 +129,11 @@ CREATE TABLE `import_log` (
 --
 
 CREATE TABLE `lm1_data` (
-  `stockno` int(10) unsigned NOT NULL,
-  `custno` int(10) unsigned NOT NULL,
-  `picklistno` int(10) unsigned NOT NULL,
-  `shipmentno` int(10) unsigned NOT NULL,
-  `picklistrowpos` int(10) unsigned NOT NULL,
+  `stockno` int(10) unsigned NOT NULL default '0',
+  `custno` int(10) unsigned NOT NULL default '0',
+  `picklistno` int(10) unsigned NOT NULL default '0',
+  `shipmentno` int(10) unsigned NOT NULL default '0',
+  `picklistrowpos` int(10) unsigned NOT NULL default '0',
   `rec_date` datetime default NULL,
   `ack_date` datetime default NULL,
   `carrier` varchar(10) default NULL,
@@ -149,54 +149,33 @@ CREATE TABLE `lm1_data` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `nightstar1_in`
+-- Tabellenstruktur für Tabelle `nightplus1_in`
 --
 
-CREATE TABLE `nightstar1_in` (
-  `carrierrefno` varchar(30) NOT NULL default '',
-  `custno` int(10) unsigned NOT NULL default '0',
+CREATE TABLE `nightplus1_in` (
+  `returncode` varchar(100) NOT NULL default '',
+  `errorcode` varchar(4) NOT NULL default '',
   `date1` datetime NOT NULL default '0000-00-00 00:00:00',
-  `value1` varchar(14) NOT NULL default '',
   `stockno` int(10) unsigned NOT NULL default '0',
-  PRIMARY KEY  (`carrierrefno`,`date1`,`stockno`)
+  PRIMARY KEY  (`returncode`,`date1`,`stockno`)
 ) TYPE=MyISAM;
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `nightstar1_out`
+-- Tabellenstruktur für Tabelle `nightplus1_out`
 --
 
-CREATE TABLE `nightstar1_out` (
-  `carrierrefno` varchar(30) NOT NULL default '',
+CREATE TABLE `nightplus1_out` (
   `carrierboxno` varchar(30) NOT NULL default '',
+  `lgmboxno` int(10) unsigned default NULL,
   `custno` int(10) unsigned NOT NULL default '0',
-  `name1` varchar(30) NOT NULL default '',
-  `name2` varchar(30) NOT NULL default '',
-  `street` varchar(30) NOT NULL default '',
-  `zipcode` varchar(10) NOT NULL default '',
-  `city` varchar(30) NOT NULL default '',
-  `deliver_until` varchar(30) NOT NULL default '',
+  `servicetime` varchar(30) NOT NULL default '',
   `shipdate` datetime NOT NULL default '0000-00-00 00:00:00',
-  `parcelcount1` int(10) unsigned NOT NULL default '0',
-  `parcelcount2` int(10) unsigned NOT NULL default '0',
+  `rowpos` int(10) unsigned NOT NULL default '0',
+  `parcelcount` int(10) unsigned NOT NULL default '0',
   `weight` double NOT NULL default '0',
-  `shipmentno` int(10) unsigned NOT NULL default '0',
-  `sender1` varchar(30) NOT NULL default '',
-  `sender2` varchar(30) NOT NULL default '',
-  `sender3` varchar(30) NOT NULL default '',
-  `content` varchar(30) NOT NULL default '',
-  `atg` varchar(30) NOT NULL default '',
-  `ast` varchar(30) NOT NULL default '',
-  `shipment` varchar(30) NOT NULL default '',
-  `dispatch` varchar(30) NOT NULL default '',
-  `labeltext` varchar(30) NOT NULL default '',
-  `freight_terms` varchar(30) NOT NULL default '',
-  `end_customer1` varchar(30) NOT NULL default '',
-  `end_customer2` varchar(30) NOT NULL default '',
-  `end_customer3` varchar(30) NOT NULL default '',
-  `end_customer4` varchar(30) NOT NULL default '',
-  `end_customer5` varchar(30) NOT NULL default '',
+  `shipmentno` int(11) unsigned NOT NULL default '0',
   `stockno` int(10) unsigned NOT NULL default '0',
   PRIMARY KEY  (`stockno`,`shipdate`,`carrierboxno`,`shipmentno`)
 ) TYPE=MyISAM;
@@ -208,7 +187,7 @@ CREATE TABLE `nightstar1_out` (
 --
 
 CREATE TABLE `gls_parcel_out` (
-  `carrierboxno` VARCHAR(12) NOT NULL DEFAULT '0',
+  `carrierboxno` varchar(12) NOT NULL default '0',
   `shipdate` date NOT NULL,
   `gls_custno` int(10) NOT NULL default '0',
   `weight` int(10) default NULL,
@@ -226,8 +205,8 @@ CREATE TABLE `gls_parcel_out` (
   `city` varchar(40) NOT NULL,
   `shipmentno` int(10) NOT NULL default '0',
   `stockno` int(3) NOT NULL,
-  `checkin_date` date default NULL,
-  `checkout_date` date default NULL,
+  `checkin_date` datetime default NULL,
+  `checkout_date` datetime default NULL,
   `status` int(2) default NULL,
   PRIMARY KEY  (`carrierboxno`,`shipdate`,`stockno`)
 ) TYPE=MyISAM;

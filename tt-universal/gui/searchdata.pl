@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use lib ('/spicers/scripts/perl');
 use lib ('D:/programme/EasyEclipse-LAMP102/workspace/tt-universal');
+use lib ('C:/Programme/EasyEclipse-LAMP102/workspace/tt-universal');
 use DBI;
 use File::Copy;
 use CGI qw(:all);
