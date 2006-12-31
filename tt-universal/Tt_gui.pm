@@ -4,6 +4,7 @@ sub init_search () {
 
 sub showsearchform () {
      my $countvar;
+     my $filled_field_value = 0;
 
 #     print "Content-type:text/html\n\n";
      @fields = qw(custno cono shipmentno partno);
@@ -20,6 +21,7 @@ sub showsearchform () {
                  label      => 'Kundennummer',        # shown in front of <input>
                  required   => 0 ,          # must fill field in?
                  validate   => '/^\d{7}$/',      # validate user input
+                 comment    => 'zum Testen: 1603435',
          );
      $form->field(
                  name       => 'cono',          # name of field (required)
@@ -42,29 +44,35 @@ sub showsearchform () {
          );
      if ($form->submitted && $form->validate) {
          # you would write code here to act on the form data
-         $countvar = 0;                                #zählvar zurücksetzen
+         $countvar = 0;                                #zählvar zurücksetzen, binär benutzt
+                                                       #summe von countvar zeigt, welche felder gesetzt sind
+                                                       #custno=8,cono=4,shipmentno=2,partno=1
          my $custno = $form->field('custno');
          if (length($custno) > 1) {
-              $countvar += 2;                          #was drin? dann zähler um zwei erhöhen
+               $countvar += 8;                          #spalte 4 wert=8
          }
          my $cono = $form->field('cono');              #dito
          if (length($cono) > 1) {
-              $countvar += 2;
+               $countvar += 4;                          #spalte 3 wert=4
          }
          my $shipmentno = $form->field('shipmentno');  #dito
          if (length($shipmentno) > 1) {
-              $countvar += 2;
+               $countvar += 2;                          #spalte 2 wert=2
          }
          my $partno = $form->field('partno');          #wenn in partno was steht
          if (length($partno) > 1) {
-              $countvar++;                             #dann nur um eins erhöhen
+               $countvar += 1;                          #spalte 1 wert=1
               $partno =~ tr/x/X/;                      #nur grosses X
          }
          if ($countvar gt 1 ) {                         #mehr als 1? alles gut
               print $form->confirm(header => 0);
               print "Und weiter gehts!<br />\n";
-              #TODO run_search aufrufen, anzahl der übergabewerte einstellen
-              run_search($custno,$cono,$shipmentno,$partno);
+              #TODO select bauen für jede wertekombination eine funktion bauen
+              #TODO auswahl funktion gemäß der eingegebenen daten
+              print "Countvar: $countvar<br />\n";
+              if ($countvar == 8 || $countvar == 9) {
+                   show_cono_level1($custno,$partno);
+              }
          }
          elsif ($countvar == 1) {                       #nur valid wenn alles ausser partno leer ist
               $form->field(name => 'partno', invalid => 1);
@@ -83,122 +91,48 @@ sub showsearchform () {
      }
 }
 
-sub run_search($$$$) {      # TODO anpassen übergabeparameter sql run_search
-     my $custno = $_[0];      #suchvars übergeben
-     my $cono = $_[1];
-     my $shipmentno = $_[2];
-     my $partno = $_[3];
+sub show_cono_level1($;$) {
+                              # funktion für auswahl cono nach übergabe custno und ggf. partno
+     my $custno_var = $_[0];
+     my $partno_var = $_[1];
      my $dbh = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
-     my $countvar = 0;
 
-#     my $select1 = "select distinct b.carrier, b.lmboxno, b.picklistno, b.shipmentno, b.custno
-#     from lm1_data b where b.custno = $custno
-#     order by b.picklistno ";
-     my $select1 = "select distinct b.carrier, b.lmboxno, b.picklistno, b.shipmentno, b.custno
-     from lm1_data b where b.picklistno in (SELECT distinct a.picklistno
-     FROM focus_data a where ";
-     if (length($custno) > 1) {
-         $select1 .= "a\.custno = '$custno'";       #where klausel anhängen
-         $countvar++;                             #dann zähler um eins erhöhen
+     #jetzt select bauen mit oder ohne partno
+     my $select1 = "SELECT distinct cono, date_format(priodate,'%d.%m.%Y') as 'date' FROM focus_data
+     where custno = '$custno_var'";
+     if ($partno_var) {
+          $select1 .= " and partno = '$partno_var'";
      }
-     if (length($cono) > 1) {
-         if ($countvar ge 1 ) {
-	         $select1 .= " and ";
-         }
-         $select1 .= "a\.cono = '$cono'";       #where klausel anhängen
-         $countvar++;                             #dann zähler um eins erhöhen
-     }
-     if (length($shipmentno) > 1) {
-         if ($countvar ge 1 ) {
-	         $select1 .= " and ";
-         }
-         $select1 .= "a\.shipmentno = '$shipmentno'";       #where klausel anhängen
-         $countvar++;                             #dann zähler um eins erhöhen
-     }
-     if (length($partno) > 1) {
-         if ($countvar ge 1 ) {
-	         $select1 .= " and ";
-         }
-         $select1 .= "a\.partno = '$partno'";       #where klausel anhängen
-         $countvar++;                             #dann zähler um eins erhöhen
-     }
-     $select1 .= " and a.status=2) order by b.picklistno ";
+     $select1 .= " and status = '2' order by cono";
+     print "<br>Select: $select1 <br>\n";
      my $sth = $dbh->prepare($select1);
-     $sth->execute();
-# print "<br />SQL: $select1 <br />";
-# TODO wenn im array was gefunden
+     $sth->execute();         #select ausführen
+     $dbh->disconnect();      #database handle schliessen
+
+     my @names = @{$sth->{NAME}};
+     my $count = 1;
+     my $var1;
      if ($sth->fetchrow_array ) {                 #wenn was gefunden wurde
-          showtable_level1 ($sth);
-          print "<a href='searchdata.pl?level=start>zur&uuml;ck</a>";
+          print "<h1>Test Überschrift custno: $custno_var partno: $partno_var</h1>";
+          print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names)."\n";
+          while(my $row = $sth->fetchrow_hashref()){
+               $count++;
+               $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names})."</tr>\n";
+               $var1 =~ s!(.*)(<td>)(\d{6})(<\/td>)(.*)!$1$2<a href="$SERVER_MAIN_FILENAME?level=scd;cono=$3" target="_blank">$3</a>$4$5!;  #relative URL!
+               print $var1;
+          }
      }
      else {                                       #wenn die Abfrage ohne Ergebnis blieb
           print "<h2>keine Daten gefunden.</h2>" ;
           print "<a href='searchdata.pl?level=start>zur&uuml;ck</a>";
      }
-     $dbh->disconnect();
 }
 
-sub get_by_carrier ($) {
-     my $carrier = $_[0];
-     print "<br> Get by carrier: $carrier!<br>";
+sub show_cono_detail ($) {
+                              # show cono detail funktion select alle db wenn cono vorhanden
+     my $cono_var = $_[0];
+     print "<h1>Test Show cono detail Überschrift</h1>";
+     print "<br> Show cono detail: $cono_var!<br>";
 }
 
-sub showtable_level1 ($) {
-     my $sth = $_[0];
-     my (@shipmentno, @picklistno, @lmboxno, @carrier, @custno);
-     my %temphash;
-     my @out;
-     print "<table border=1>\n".
-     "  <th>carrier</th>\n".
-     "  <th>lmboxno</th>\n".
-     "  <th>picklistno</th>\n".
-     "  <th>shipmentno</th>\n".
-     "  <th>custno</th>\n";
-     while (my $hash_ref = $sth->fetchrow_hashref) {
-      print "  <tr>\n";
-      print "    <td><a target='_blank' href='searchdata.pl?level=get_by_carrier;carrier=$hash_ref->{carrier}'>$hash_ref->{carrier}</a></td>\n";
-      push @carrier,$hash_ref->{carrier};
-      print "    <td><a target='_blank' href='searchdata.pl?level=get_by_lmboxno;lmboxno=$hash_ref->{lmboxno}'>$hash_ref->{lmboxno}</a></td>\n";
-      push @lmboxno,$hash_ref->{lmboxno};
-      print "    <td><a target='_blank' href='searchdata.pl?level=get_by_picklistno;picklistno=$hash_ref->{picklistno}'>$hash_ref->{picklistno}</a></td>\n";
-      push @picklistno,$hash_ref->{picklistno};
-      print "    <td><a target='_blank' href='searchdata.pl?level=get_by_shipmentno;shipmentno=$hash_ref->{shipmentno}'>$hash_ref->{shipmentno}</a></td>\n";
-      push @shipmentno,$hash_ref->{shipmentno};
-      print "    <td><a target='_blank' href='searchdata.pl?level=get_by_custno;custno=$hash_ref->{custno}'>$hash_ref->{custno}</a></td>\n";
-      push @custno,$hash_ref->{custno};
-      print "  </tr>\n";
-     }
-     print "</table>";
-
-     undef %temphash;
-     @out = grep(!$temphash{$_}++, @carrier);
-     foreach my $hash_string ( @out ) {
-     	print "Carrier Wert: $hash_string <br>\n";
-     } # -----  end foreach  -----
-
-     undef %temphash;
-     @out = grep(!$temphash{$_}++, @lmboxno);
-     foreach my $hash_string ( @out ) {
-     	print "lmboxno Wert: $hash_string <br>\n";
-     } # -----  end foreach  -----
-
-     undef %temphash;
-     @out = grep(!$temphash{$_}++, @picklistno);
-     foreach my $hash_string ( @out ) {
-     	print "picklistno Wert: $hash_string <br>\n";
-     } # -----  end foreach  -----
-
-     undef %temphash;
-     @out = grep(!$temphash{$_}++, @shipmentno);
-     foreach my $hash_string ( @out ) {
-     	print "shipmentno Wert: $hash_string <br>\n";
-     } # -----  end foreach  -----
-
-     undef %temphash;
-     @out = grep(!$temphash{$_}++, @custno);
-     foreach my $hash_string ( @out ) {
-     	print "custno Wert: $hash_string <br>\n";
-     } # -----  end foreach  -----
-
-}
 1;
