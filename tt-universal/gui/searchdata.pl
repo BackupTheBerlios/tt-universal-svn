@@ -34,11 +34,11 @@ if ($level eq 'start') {
     # Suchformular ausgeben
     showsearchform ();
 }
-#elsif ($level eq 'run_search') {
-#    run_search($q->param('custno'));
-#}
-elsif ($level eq 'get_by_carrier') {
-    get_by_carrier( $q->param('carrier') );
+elsif ($level eq 'scl') {                         #scd show cono level 1
+    show_cono_level1( $q->param('custno'), $q->param('partno') );
+}
+elsif ($level eq 'scd') {                         #scd show cono detail
+    show_cono_detail( $q->param('cono') );
 }
 else { # unbekannter Runmode
     print '<br>Runmode Fehler <br>';
