@@ -26,7 +26,7 @@ CREATE TABLE `dhl_easylog1` (
   `length` double NOT NULL default '0',
   `width` double NOT NULL default '0',
   `height` double NOT NULL default '0',
-  `lgmboxno` varchar(35) NOT NULL default '',
+  `lgmboxno` int(10) unsigned default NULL,
   `carrierboxno` varchar(35) NOT NULL default '',
   `routingcode` varchar(35) default NULL,
   `servicecode` varchar(35) default NULL,
@@ -79,7 +79,7 @@ CREATE TABLE `gls_gepard1` (
   `date2` datetime NOT NULL default '0000-00-00 00:00:00',
   `custno` int(10) unsigned NOT NULL default '0',
   `carrierboxno` varchar(35) NOT NULL default '',
-  `shipmentno` varchar(40) NOT NULL default '',
+  `shipmentno` int(10) unsigned default NULL,
   `name1` varchar(60) NOT NULL default '',
   `name2` varchar(60) default NULL,
   `name3` varchar(60) default NULL,
@@ -137,7 +137,7 @@ CREATE TABLE `lm1_data` (
   `rec_date` datetime default NULL,
   `ack_date` datetime default NULL,
   `carrier` varchar(10) default NULL,
-  `lmboxno` int(10) unsigned default NULL,
+  `lgmboxno` int(10) unsigned default NULL,
   `carrierboxno` int(10) unsigned default NULL,
   PRIMARY KEY  (`stockno`,`custno`,`picklistno`,`shipmentno`,`picklistrowpos`),
   KEY `lmboxno` (`lmboxno`),
@@ -149,10 +149,10 @@ CREATE TABLE `lm1_data` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `nightplus1_in`
+-- Tabellenstruktur für Tabelle `nightstar1_in`
 --
 
-CREATE TABLE `nightplus1_in` (
+CREATE TABLE `nightstar1_in` (
   `returncode` varchar(100) NOT NULL default '',
   `errorcode` varchar(4) NOT NULL default '',
   `date1` datetime NOT NULL default '0000-00-00 00:00:00',
@@ -163,10 +163,10 @@ CREATE TABLE `nightplus1_in` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `nightplus1_out`
+-- Tabellenstruktur für Tabelle `nightstar1_out`
 --
 
-CREATE TABLE `nightplus1_out` (
+CREATE TABLE `nightstar1_out` (
   `carrierboxno` varchar(30) NOT NULL default '',
   `lgmboxno` int(10) unsigned default NULL,
   `custno` int(10) unsigned NOT NULL default '0',
@@ -210,3 +210,10 @@ CREATE TABLE `gls_parcel_out` (
   `status` int(2) default NULL,
   PRIMARY KEY  (`carrierboxno`,`shipdate`,`stockno`)
 ) TYPE=MyISAM;
+
+-- Comment
+-- 20070101 gepart:  `shipmentno` int(10) unsigned default NULL,
+-- 20070101 lm1_data: ALTER TABLE `lm1_data` CHANGE `lmboxno` `lgmboxno` INT( 10 ) UNSIGNED NULL DEFAULT NULL
+-- 20070101 nightSTAR ist richtig
+-- 20070101 dhl_easylog1: `lgmboxno` int(10) unsigned default NULL,
+--
