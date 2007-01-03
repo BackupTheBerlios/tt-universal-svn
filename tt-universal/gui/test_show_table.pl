@@ -15,11 +15,11 @@ my $dbh = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}
 #der erste select wird ausgefürht und holt conos
 #test2 custno 1606770
 
-#my $select1 = "SELECT distinct cono, date_format(priodate,'%d.%m.%Y') as 'date' FROM focus_data
-#where custno = '1603435' and status = '2' order by cono";
-
 my $select1 = "SELECT distinct cono, date_format(priodate,'%d.%m.%Y') as 'date' FROM focus_data
-where custno = '1606770' and status = '2' order by cono";
+where custno = '1603435' and status = '2' order by cono";
+
+#my $select1 = "SELECT distinct cono, date_format(priodate,'%d.%m.%Y') as 'date' FROM focus_data
+#where custno = '1606770' and status = '2' order by cono";
 
 my $sth = $dbh->prepare($select1);
 $sth->execute();
@@ -62,7 +62,7 @@ print "</table><br>\n";
 #und anzeigen
 
 my $alle_conos = join(',',@{$hash{'cono'}});
-print "<br>\n";
+print "<br>Abfrage 2<br>\n";
 
 my $select2 = "
      SELECT distinct
@@ -116,107 +116,131 @@ my $liste_lgmboxno = join(',',@lgmboxno_array);
 print "Lgmboxno: ".$liste_lgmboxno;
 print "<br>\n";
 
-#abfrage 1 gepard
-print "<br>Ergebnisse aus GLS Gepard (manueller Versand):\n";
-print "<br>\n";
-
-my $select3 = "
-SELECT g.custno, g.shipmentno, g.name1, g.name2, g.name3,
-g.street, g.city, g.city2, g.zipcode, g.zipcode2,
-g.countrycode, g.stockno, g.date1, g.date2,
-g.carrierboxno  FROM gls_gepard1 g
-where g.shipmentno in ($liste_shipmentno)";
-
-my $sth3 = $dbh->prepare($select3);
-$sth3->execute();
-
-my @names3 = @{$sth3->{NAME}};
-print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names3)."\n";
-while(my $row = $sth3->fetchrow_hashref()){
-     $count++;
-     $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names3})."</tr>\n";
-     print $var1;
-}
-print "</table><br>\n";
-
-#abfrage 2 dhl easylog
-
-print "<br>Ergebnisse aus DHL Easylog (manueller Versand):\n";
-print "<br>\n";
-
-my $select4 = "
-SELECT d.shipmentno, d.name1, d.name2, d.name3,
-d.street, d.street_number, d.city, d.zipcode, d.countrycode,
-d.stockno, d.lgmboxno, d.carrierboxno FROM dhl_easylog1 d
-where d.lgmboxno in ($liste_lgmboxno)";
-
-my $sth4 = $dbh->prepare($select4);
-$sth4->execute();
-
-my @names4 = @{$sth4->{NAME}};
-print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names4)."\n";
-while(my $row = $sth4->fetchrow_hashref()){
-     $count++;
-     $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names4})."</tr>\n";
-     print $var1;
-}
-print "</table><br>\n";
-
-#abfrage 3 nightplus
-
-print "<br>Ergebnisse aus Nightplus Nachkurier (manueller Versand):\n";
-print "<br>\n";
-
-my $select5 = "
-SELECT n.custno, n.shipmentno, n.lgmboxno, n.carrierboxno,
-n.stockno, n.shipdate FROM nightstar1_out n
-WHERE n.lgmboxno in ($liste_lgmboxno)";
-
-my $sth5 = $dbh->prepare($select5);
-$sth5->execute();
-
-my @names5 = @{$sth5->{NAME}};
-print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names5)."\n";
-while(my $row = $sth5->fetchrow_hashref()){
-     $count++;
-     $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names5})."</tr>\n";
-     print $var1;
-}
-print "</table><br>\n";
-
-# hier folgen alle FEHLER bei Nightstar, nur was bei LM als NS geflaggt ist und NICHT in der NS
-# tabelle steht, wird hier angezeigt
-
-my $select6 = "
-SELECT `lm1_data`.`lgmboxno`
-FROM
- `lm1_data` `lm1_data`
-  LEFT OUTER JOIN `nightstar1_out` `nightstar1_out`
-  ON `lm1_data`.`lgmboxno` = `nightstar1_out`.`lgmboxno`
-WHERE
- (`lm1_data`.`lgmboxno` IN ($liste_lgmboxno)) AND
- (`lm1_data`.`carrier` LIKE 'np%') AND
- (`nightstar1_out`.`lgmboxno` IS NULL)";
-
-my $sth6 = $dbh->prepare($select6);
-$sth6->execute();
-
-if ($sth6->fetchrow_array ) {                 #wenn was gefunden wurde
-     print "<font color=\"#FF0000\">\n";
-     print "<br>FEHLER!<br>Für die folgenden cono's wurde kein Nighstar Ausgang gefunden, obwohl sie im LM entsprechend markiert sind:\n";
-     print "<br>\n";
-
-
-     my @names6 = @{$sth6->{NAME}};
-     print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names6)."\n";
-     while(my $row = $sth6->fetchrow_hashref()){
-          $count++;
-          $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names6})."</tr>\n";
-          print $var1;
-     }
-     print "</table></font><br>\n";
-}
+query_gls_gepard ($liste_shipmentno);
+query_dhl_easylog ($liste_lgmboxno);
+query_nightstar ($liste_lgmboxno);
 
 #fertig
-
 print $q->end_html();
+
+###########################################
+#abfrage 1 gepard
+sub query_gls_gepard($){
+###########################################
+
+     my $liste_shipmentno = $_[0];        #übergabe der shipmentnos als string
+     print "<br>Ergebnisse aus GLS Gepard (manueller Versand):\n";
+     print "<br>\n";
+
+     my $select3 = "
+     SELECT g.custno, g.shipmentno, g.name1, g.name2, g.name3,
+     g.street, g.city, g.city2, g.zipcode, g.zipcode2,
+     g.countrycode, g.stockno, g.date1, g.date2,
+     g.carrierboxno  FROM gls_gepard1 g
+     where g.shipmentno in ($liste_shipmentno)";
+
+     my $dbh3 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+     my $sth3 = $dbh->prepare($select3);
+     $sth3->execute();
+     $dbh3->disconnect();
+
+     my @names3 = @{$sth3->{NAME}};
+     print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names3)."\n";
+     while(my $row = $sth3->fetchrow_hashref()){
+          $count++;
+          $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names3})."</tr>\n";
+          print $var1;
+     }
+     print "</table><br>\n";
+}
+
+###########################################
+#abfrage 2 dhl easylog
+sub query_dhl_easylog($){
+###########################################
+     my $liste_lgmboxno = $_[0];
+     print "<br>Ergebnisse aus DHL Easylog (manueller Versand):\n";
+     print "<br>\n";
+
+     my $select4 = "
+     SELECT d.shipmentno, d.name1, d.name2, d.name3,
+     d.street, d.street_number, d.city, d.zipcode, d.countrycode,
+     d.stockno, d.lgmboxno, d.carrierboxno FROM dhl_easylog1 d
+     where d.lgmboxno in ($liste_lgmboxno)";
+
+     my $dbh4 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+     my $sth4 = $dbh->prepare($select4);
+     $sth4->execute();
+     $dbh4->disconnect();
+
+     my @names4 = @{$sth4->{NAME}};
+     print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names4)."\n";
+     while(my $row = $sth4->fetchrow_hashref()){
+          $count++;
+          $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names4})."</tr>\n";
+          print $var1;
+     }
+     print "</table><br>\n";
+}
+
+###########################################
+#abfrage 3 nightstar
+sub query_nightstar($){
+###########################################
+     my $liste_lgmboxno = $_[0];
+     print "<br>Ergebnisse aus Nightplus Nachkurier (manueller Versand):\n";
+     print "<br>\n";
+
+     my $select5 = "
+     SELECT n.custno, n.shipmentno, n.lgmboxno, n.carrierboxno,
+     n.stockno, n.shipdate FROM nightstar1_out n
+     WHERE n.lgmboxno in ($liste_lgmboxno)";
+
+     my $dbh5 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+     my $sth5 = $dbh->prepare($select5);
+     $sth5->execute();
+
+     my @names5 = @{$sth5->{NAME}};
+     print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names5)."\n";
+     while(my $row = $sth5->fetchrow_hashref()){
+          $count++;
+          $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names5})."</tr>\n";
+          print $var1;
+     }
+     print "</table><br>\n";
+
+     # hier folgen alle FEHLER bei Nightstar, nur was bei LM als NS geflaggt ist und NICHT in der NS
+     # tabelle steht, wird hier angezeigt
+
+     my $select6 = "
+     SELECT `lm1_data`.`lgmboxno`
+     FROM
+      `lm1_data` `lm1_data`
+       LEFT OUTER JOIN `nightstar1_out` `nightstar1_out`
+       ON `lm1_data`.`lgmboxno` = `nightstar1_out`.`lgmboxno`
+     WHERE
+      (`lm1_data`.`lgmboxno` IN ($liste_lgmboxno)) AND
+      (`lm1_data`.`carrier` LIKE 'np%') AND
+      (`nightstar1_out`.`lgmboxno` IS NULL)";
+
+     my $sth6 = $dbh->prepare($select6);
+     $sth6->execute();
+     $dbh5->disconnect();
+
+     if ($sth6->fetchrow_array ) {                 #wenn was gefunden wurde
+          print "<font color=\"#FF0000\">\n";
+          print "<br>FEHLER!<br>Für die folgenden cono's wurde kein Nighstar Ausgang gefunden, obwohl sie im LM entsprechend markiert sind:\n";
+          print "<br>\n";
+
+
+          my @names6 = @{$sth6->{NAME}};
+          print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names6)."\n";
+          while(my $row = $sth6->fetchrow_hashref()){
+               $count++;
+               $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names6})."</tr>\n";
+               print $var1;
+          }
+          print "</table></font><br>\n";
+     }
+}
+
