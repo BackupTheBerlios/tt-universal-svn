@@ -39,8 +39,6 @@ my $name;
 
 #Ausgabe der Tabelle mit den conos
 
-print join(';',@names);       #debug
-print "<br>\n";
 
 print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names)."\n";
 while(my $row = $sth->fetchrow_hashref()){
@@ -62,66 +60,99 @@ print "</table><br>\n";
 #und anzeigen
 
 my $alle_conos = join(',',@{$hash{'cono'}});
-print "<br>Abfrage 2<br>\n";
+# $alle_conos = "0";
 
-my $select2 = "
-     SELECT distinct
-	 `lm1_data`.`custno`,
-     `lm1_data`.`shipmentno`,
-	 `lm1_data`.`rec_date`,
-	 `lm1_data`.`ack_date`,
-	 `lm1_data`.`carrier`,
-     `lm1_data`.`carrierboxno`,
-	 `lm1_data`.`lgmboxno`,
-	 `lm1_data`.`stockno`
-     FROM
-     `focus_data` `focus_data`
-     INNER JOIN `lm1_data` `lm1_data`
-     ON `focus_data`.`picklistno` = `lm1_data`.`picklistno`
-     WHERE (`focus_data`.`cono` in ($alle_conos))";
-
-my $sth2 = $dbh->prepare($select2);
-$sth2->execute();
-
-my @names2 = @{$sth2->{NAME}};
-print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names2)."\n";
-while(my $row = $sth2->fetchrow_hashref()){
-     $count++;
-     $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names2})."</tr>\n";
-     print $var1;
-     for $name(@names2){
-          push @{$hash{$name}},$row->{$name};
-     }
+my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main ("",$alle_conos,"","","8"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+if ($liste_shipmentno && $liste_lgmboxno) {
+     query_gls_gepard ($liste_shipmentno);
+     query_dhl_easylog ($liste_lgmboxno);
+     query_nightstar ($liste_lgmboxno);
 }
-print "</table><br>\n";
 
-#und mit diesen ergebnissen nun die anderen tabellen abfragen
-#dazu nochmal entsprechende strings ezeugen
-
-#doppelte werte entfernen
-my %saw;
-@saw{@{$hash{'shipmentno'}}} = ();
-my @shipmentno_array = keys %saw;
-
-my %saw2;
-@saw2{@{$hash{'lgmboxno'}}} = ();
-my @lgmboxno_array = keys %saw2;
-
-#aus dem array einen string machen
-my $liste_shipmentno = join(',',@shipmentno_array);
-print "Shipmentno: ".$liste_shipmentno;
-print "<br>\n";
-
-my $liste_lgmboxno = join(',',@lgmboxno_array);
-print "Lgmboxno: ".$liste_lgmboxno;
-print "<br>\n";
-
-query_gls_gepard ($liste_shipmentno);
-query_dhl_easylog ($liste_lgmboxno);
-query_nightstar ($liste_lgmboxno);
-
-#fertig
+print "<br>Fertig.<br>";
 print $q->end_html();
+
+
+###########################################
+#hauptabfrage lm
+sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+###########################################
+     my $var_custno = $_[0];
+     my $var_cono = $_[1];
+     my $var_shipmentno = $_[2];
+     my $var_partno = $_[3];
+     my $query_variant = $_[4];
+
+if ($var_custno ) {print"<br>var custno def: $var_custno"};
+if ($var_cono ) {print"<br>var cono def: $var_cono "};
+if ($var_shipmentno  ) {print"<br>var shipmentno def: $var_shipmentno "};
+if ($var_partno  ) {print"<br>var partno def: $var_partno "};
+if ($query_variant  ) {print"<br>var query variant def: $query_variant "};
+
+     print "<br>Ergebnisse aus LM:<br>\n";
+
+     #hier beginnt der query-string
+     my $select2 = "
+          SELECT distinct
+     	 `lm1_data`.`custno`,
+          `lm1_data`.`shipmentno`,
+     	 `lm1_data`.`rec_date`,
+     	 `lm1_data`.`ack_date`,
+     	 `lm1_data`.`carrier`,
+          `lm1_data`.`carrierboxno`,
+     	 `lm1_data`.`lgmboxno`,
+     	 `lm1_data`.`stockno`
+          FROM
+          `focus_data` `focus_data`
+          INNER JOIN `lm1_data` `lm1_data`
+          ON `focus_data`.`picklistno` = `lm1_data`.`picklistno`";
+
+     for ($query_variant) {   #die abfragevariante entscheidet, wie der querystring weitergeht
+         if (/2/)  { }     # do something else
+         elsif (/3/)  { }     # do something else
+         elsif (/4/)  { }     # do something else
+         elsif (/5/)  { }     # do something else
+         elsif (/6/)  { }     # do something else
+         elsif (/7/)  { }     # do something else
+         elsif (/8/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono))"; }     # do something else
+         elsif (/9/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono))"; }     # do something else
+         elsif (/10/)  { }     # do something else
+         elsif (/11/)  { }     # do something else
+         elsif (/12/)  { }     # do something else
+         elsif (/13/)  { }     # do something else
+         elsif (/14/)  { }     # do something else
+        else            { }     # default
+     }
+
+     $select2 .= " ORDER by `lm1_data`.`ack_date`";         #die sortierreihenfolge
+
+     my $sth2 = $dbh->prepare($select2);
+     $sth2->execute();
+
+     if ($sth2->fetchrow_array ) {                 #wenn was gefunden wurde
+          my @names2 = @{$sth2->{NAME}};
+          print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names2)."\n";
+          while(my $row = $sth2->fetchrow_hashref()){
+               $count++;
+               $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names2})."</tr>\n";
+               print $var1;
+               for $name(@names2){
+                    push @{$hash{$name}},$row->{$name};
+               }
+          }
+          print "</table><br>\n";
+          my $liste_shipmentno = join(',',@{$hash{'shipmentno'}});    #strings erzeugen für die rückgabe
+          my $liste_lgmboxno = join(',',@{$hash{'lgmboxno'}});
+
+     }
+     else {
+          print "<b>Keine Daten gefunden!</b><br>\n";
+          my $liste_shipmentno = "";    #leere strings erzeugen für die rückgabe
+          my $liste_lgmboxno = "";
+
+     }
+     return ($liste_shipmentno, $liste_lgmboxno);      #es werden ZWEI werte zurückgegeben
+}
 
 ###########################################
 #abfrage 1 gepard
@@ -144,14 +175,20 @@ sub query_gls_gepard($){
      $sth3->execute();
      $dbh3->disconnect();
 
-     my @names3 = @{$sth3->{NAME}};
-     print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names3)."\n";
-     while(my $row = $sth3->fetchrow_hashref()){
-          $count++;
-          $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names3})."</tr>\n";
-          print $var1;
+     if ($sth3->fetchrow_array ) {                 #wenn was gefunden wurde
+          my @names3 = @{$sth3->{NAME}};
+          print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names3)."\n";
+          while(my $row = $sth3->fetchrow_hashref()){
+               $count++;
+               $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names3})."</tr>\n";
+               print $var1;
+          }
+          print "</table><br>\n";
      }
-     print "</table><br>\n";
+     else {
+          print "<b>Keine Daten gefunden!</b><br>\n";
+     }
+
 }
 
 ###########################################
@@ -173,14 +210,20 @@ sub query_dhl_easylog($){
      $sth4->execute();
      $dbh4->disconnect();
 
-     my @names4 = @{$sth4->{NAME}};
-     print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names4)."\n";
-     while(my $row = $sth4->fetchrow_hashref()){
-          $count++;
-          $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names4})."</tr>\n";
-          print $var1;
+     if ($sth4->fetchrow_array ) {                 #wenn was gefunden wurde
+          my @names4 = @{$sth4->{NAME}};
+          print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names4)."\n";
+          while(my $row = $sth4->fetchrow_hashref()){
+               $count++;
+               $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names4})."</tr>\n";
+               print $var1;
+          }
+          print "</table><br>\n";
      }
-     print "</table><br>\n";
+     else {
+          print "<b>Keine Daten gefunden!</b><br>\n";
+     }
+
 }
 
 ###########################################
@@ -200,14 +243,19 @@ sub query_nightstar($){
      my $sth5 = $dbh->prepare($select5);
      $sth5->execute();
 
-     my @names5 = @{$sth5->{NAME}};
-     print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names5)."\n";
-     while(my $row = $sth5->fetchrow_hashref()){
-          $count++;
-          $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names5})."</tr>\n";
-          print $var1;
+     if ($sth5->fetchrow_array ) {                 #wenn was gefunden wurde
+          my @names5 = @{$sth5->{NAME}};
+          print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names5)."\n";
+          while(my $row = $sth5->fetchrow_hashref()){
+               $count++;
+               $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names5})."</tr>\n";
+               print $var1;
+          }
+          print "</table><br>\n";
      }
-     print "</table><br>\n";
+     else {
+          print "<b>Keine Daten gefunden!</b><br>\n";
+     }
 
      # hier folgen alle FEHLER bei Nightstar, nur was bei LM als NS geflaggt ist und NICHT in der NS
      # tabelle steht, wird hier angezeigt
