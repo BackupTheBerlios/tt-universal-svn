@@ -73,6 +73,38 @@ sub showsearchform () {
               #TODO select bauen für jede wertekombination eine funktion bauen
               #TODO auswahl funktion gemäß der eingegebenen daten
               print "Countvar: $countvar<br />\n";
+              if ($countvar == 2) {     #shipmentno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","","$shipmentno","","2"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar == 3) {     #shipmentno plus partno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","","$shipmentno","$partno","3"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar == 4) {     #cono
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","$cono","","","4"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar == 5) {     #cono plus partno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","$cono","","$partno","5"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
               if ($countvar == 8 || $countvar == 9) {
                    show_cono_level1($custno,$partno);
               }
@@ -117,7 +149,13 @@ sub show_cono_level1($;$) {
      $sth->execute();         #select ausführen
      $dbh->disconnect();      #database handle schliessen
 
-     if ($sth->fetchrow_array ) {                 #wenn was gefunden wurde
+#while ( my @ergebnis = $sth->fetchrow_array() ){
+#  # Im Array @ergebnis steht nun ein Datensatz
+#  print $ergebnis[0] . " " . $ergebnis[1] . "<br>\n";
+#}
+
+
+     if ($sth->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names = @{$sth->{NAME}};
           print "<h1>Test Überschrift custno: $custno_var partno: $partno_var</h1>";
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names)."\n";
@@ -188,14 +226,14 @@ if ($query_variant  ) {print"<br>var query variant def: $query_variant <br>"};
           ON `focus_data`.`picklistno` = `lm1_data`.`picklistno`";
 
      for ($query_variant) {   #die abfragevariante entscheidet, wie der querystring weitergeht
-         if (/2/)  { }     # do something else
-         elsif (/3/)  { }     # do something else
-         elsif (/4/)  { }     # do something else
-         elsif (/5/)  { }     # do something else
+         if (/2/)  { $select2 .= " WHERE (`focus_data`.`shipmentno` in ($var_shipmentno))";}     # do something else
+         elsif (/3/)  { $select2 .= " WHERE (`focus_data`.`shipmentno` in ($var_shipmentno)) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
+         elsif (/4/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono))";}     # do something else
+         elsif (/5/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono)) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
          elsif (/6/)  { }     # do something else
          elsif (/7/)  { }     # do something else
          elsif (/8/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono))"; }     # do something else
-         elsif (/9/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono))"; }     # do something else
+         elsif (/9/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono)) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
          elsif (/10/)  { }     # do something else
          elsif (/11/)  { }     # do something else
          elsif (/12/)  { }     # do something else
@@ -205,13 +243,13 @@ if ($query_variant  ) {print"<br>var query variant def: $query_variant <br>"};
      }
 
      $select2 .= " ORDER by `lm1_data`.`ack_date`";         #die sortierreihenfolge
-
+print "<br>Select2: $select2<br>\n";
      my $dbh2 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
      my $sth2 = $dbh2->prepare($select2);
      $sth2->execute();
      $dbh2->disconnect();
 
-     if ($sth2->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth2->rows gt 0 ) {                 #wenn was gefunden wurde
           @names2 = @{$sth2->{NAME}};
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names2)."\n";
           while(my $row = $sth2->fetchrow_hashref()){
@@ -258,7 +296,7 @@ sub query_gls_gepard($){
      $sth3->execute();
      $dbh3->disconnect();
 
-     if ($sth3->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth3->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names3 = @{$sth3->{NAME}};
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names3)."\n";
           while(my $row = $sth3->fetchrow_hashref()){
@@ -293,7 +331,7 @@ sub query_dhl_easylog($){
      $sth4->execute();
      $dbh4->disconnect();
 
-     if ($sth4->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth4->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names4 = @{$sth4->{NAME}};
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names4)."\n";
           while(my $row = $sth4->fetchrow_hashref()){
@@ -326,7 +364,7 @@ sub query_nightstar($){
      my $sth5 = $dbh5->prepare($select5);
      $sth5->execute();
 
-     if ($sth5->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth5->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names5 = @{$sth5->{NAME}};
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names5)."\n";
           while(my $row = $sth5->fetchrow_hashref()){
@@ -358,7 +396,7 @@ sub query_nightstar($){
      $sth6->execute();
      $dbh5->disconnect();
 
-     if ($sth6->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth5->rows gt 0 ) {                 #wenn was gefunden wurde
           print "<font color=\"#FF0000\">\n";
           print "<br>FEHLER!<br>Für die folgenden cono's wurde kein Nighstar Ausgang gefunden, obwohl sie im LM entsprechend markiert sind:\n";
           print "<br>\n";
