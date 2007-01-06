@@ -129,7 +129,7 @@ if ($query_variant  ) {print"<br>var query variant def: $query_variant "};
      my $sth2 = $dbh->prepare($select2);
      $sth2->execute();
 
-     if ($sth2->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth2->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names2 = @{$sth2->{NAME}};
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names2)."\n";
           while(my $row = $sth2->fetchrow_hashref()){
@@ -175,7 +175,7 @@ sub query_gls_gepard($){
      $sth3->execute();
      $dbh3->disconnect();
 
-     if ($sth3->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth3->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names3 = @{$sth3->{NAME}};
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names3)."\n";
           while(my $row = $sth3->fetchrow_hashref()){
@@ -210,7 +210,7 @@ sub query_dhl_easylog($){
      $sth4->execute();
      $dbh4->disconnect();
 
-     if ($sth4->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth4->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names4 = @{$sth4->{NAME}};
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names4)."\n";
           while(my $row = $sth4->fetchrow_hashref()){
@@ -243,7 +243,7 @@ sub query_nightstar($){
      my $sth5 = $dbh->prepare($select5);
      $sth5->execute();
 
-     if ($sth5->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth5->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names5 = @{$sth5->{NAME}};
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names5)."\n";
           while(my $row = $sth5->fetchrow_hashref()){
@@ -275,7 +275,7 @@ sub query_nightstar($){
      $sth6->execute();
      $dbh5->disconnect();
 
-     if ($sth6->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth6->rows gt 0 ) {                 #wenn was gefunden wurde
           print "<font color=\"#FF0000\">\n";
           print "<br>FEHLER!<br>Für die folgenden cono's wurde kein Nighstar Ausgang gefunden, obwohl sie im LM entsprechend markiert sind:\n";
           print "<br>\n";
