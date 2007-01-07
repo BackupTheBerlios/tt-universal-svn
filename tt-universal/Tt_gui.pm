@@ -21,26 +21,26 @@ sub showsearchform () {
              );
      $form->field(
                  name       => 'custno',          # name of field (required)
-                 label      => 'Kundennummer',        # shown in front of <input>
+                 label      => 'Kundennummer:',        # shown in front of <input>
                  required   => 0 ,          # must fill field in?
                  validate   => '/^\d{7}$/',      # validate user input
                  comment    => 'zum Testen: 1603435',
          );
      $form->field(
                  name       => 'cono',          # name of field (required)
-                 label      => 'Auftragsnummer',        # shown in front of <input>
+                 label      => 'Auftragsnummer:',        # shown in front of <input>
                  required   => 0 ,          # must fill field in?
                  validate   => '/^\d{6}$/',      # validate user input
          );
      $form->field(
                  name       => 'shipmentno',          # name of field (required)
-                 label      => 'Lieferscheinnummer',        # shown in front of <input>
+                 label      => 'Lieferscheinnummer:',        # shown in front of <input>
                  required   => 0 ,          # must fill field in?
                  validate   => '/^\d{6}$/',      # validate user input
          );
      $form->field(
                  name       => 'partno',          # name of field (required)
-                 label      => 'Artikelnummer',        # shown in front of <input>
+                 label      => 'Artikelnummer:',        # shown in front of <input>
                  required   => 0 ,          # must fill field in?
                  validate   => '/^\d{5}(\d|x|X)$/',      # validate user input
                  comment    => 'Nach einer Artikelnummer kann nur ZUSÄTZLICH gesucht werden.<br />',        # printed after field
@@ -69,51 +69,115 @@ sub showsearchform () {
          }
          if ($countvar gt 1 ) {                         #mehr als 1? alles gut
               print $form->confirm(header => 0);
-              print "Und weiter gehts!<br />\n";
+              print "<br>\n";
               #TODO select bauen für jede wertekombination eine funktion bauen
               #TODO auswahl funktion gemäß der eingegebenen daten
-              print "Countvar: $countvar<br />\n";
-              if ($countvar == 2) {     #shipmentno
-                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","","$shipmentno","","2"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+print "Countvar: $countvar<br />\n";
+              if ($countvar eq 2) {     #shipmentno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","","$shipmentno","","02"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
                          if ($liste_shipmentno && $liste_lgmboxno) {
                               query_gls_gepard ($liste_shipmentno);
                               query_dhl_easylog ($liste_lgmboxno);
                               query_nightstar ($liste_lgmboxno);
                          }
               }
-              if ($countvar == 3) {     #shipmentno plus partno
-                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","","$shipmentno","$partno","3"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+              if ($countvar eq 3) {     #shipmentno plus partno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","","$shipmentno","$partno","03"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
                          if ($liste_shipmentno && $liste_lgmboxno) {
                               query_gls_gepard ($liste_shipmentno);
                               query_dhl_easylog ($liste_lgmboxno);
                               query_nightstar ($liste_lgmboxno);
                          }
               }
-              if ($countvar == 4) {     #cono
-                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","$cono","","","4"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+              if ($countvar eq 4) {     #cono
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","$cono","","","04"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
                          if ($liste_shipmentno && $liste_lgmboxno) {
                               query_gls_gepard ($liste_shipmentno);
                               query_dhl_easylog ($liste_lgmboxno);
                               query_nightstar ($liste_lgmboxno);
                          }
               }
-              if ($countvar == 5) {     #cono plus partno
-                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","$cono","","$partno","5"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+              if ($countvar eq 5) {     #cono plus partno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","$cono","","$partno","05"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
                          if ($liste_shipmentno && $liste_lgmboxno) {
                               query_gls_gepard ($liste_shipmentno);
                               query_dhl_easylog ($liste_lgmboxno);
                               query_nightstar ($liste_lgmboxno);
                          }
               }
-              if ($countvar == 8 || $countvar == 9) {
+              if ($countvar eq 6) {     #cono plus shipmentno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","$cono","$shipmentno","","06"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar eq 7) {     #cono plus shipmentno plus partno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","$cono","$shipmentno","$partno","07"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar eq 8 || $countvar eq 9) {  #custno or custno plus partno
                    show_cono_level1($custno,$partno);
               }
+              if ($countvar eq 10) {     #custno plus shipmentno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("$custno","","$shipmentno","","10"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar eq 11) {     #custno plus shipmentno plus partno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("$custno","","$shipmentno","$partno","11"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar eq 12) {     #custno plus cono
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("$custno","$cono","","","12"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar eq 13) {     #custno plus cono plus partno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("$custno","$cono","","$partno","13"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar eq 14) {     #custno plus cono plus shipmentno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("$custno","$cono","$shipmentno","","14"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
+              if ($countvar eq 15) {     #custno plus cono plus shipmentno plus partno
+                    my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("$custno","$cono","$shipmentno","$partno","15"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+                         if ($liste_shipmentno && $liste_lgmboxno) {
+                              query_gls_gepard ($liste_shipmentno);
+                              query_dhl_easylog ($liste_lgmboxno);
+                              query_nightstar ($liste_lgmboxno);
+                         }
+              }
          }
-         elsif ($countvar == 1) {                       #nur valid wenn alles ausser partno leer ist
+         elsif ($countvar eq 1) {                       #nur valid wenn alles ausser partno leer ist
               $form->field(name => 'partno', invalid => 1);
               print $form->render(header => 0, sticky => 1);
          }
-         elsif ($countvar == 0) {                       #alles leer? nochmal
+         elsif ($countvar eq 0) {                       #alles leer? nochmal
               print "Keine Daten erhalten! Nochmal.<br />\n";
               $form->field(name => 'partno', invalid => 0);
               print $form->render(header => 0, sticky => 1);
@@ -189,7 +253,7 @@ sub show_cono_detail ($) {
 
 ###########################################
 #hauptabfrage lm
-sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (02-15)
 ###########################################
      my $var_custno = $_[0];
      my $var_cono = $_[1];
@@ -223,27 +287,28 @@ if ($query_variant  ) {print"<br>var query variant def: $query_variant <br>"};
           FROM
           `focus_data` `focus_data`
           INNER JOIN `lm1_data` `lm1_data`
-          ON `focus_data`.`picklistno` = `lm1_data`.`picklistno`";
+          ON `focus_data`.`picklistno` = `lm1_data`.`picklistno`
+          AND `focus_data`.`shipmentrowpos` = `lm1_data`.`picklistrowpos` ";    #die letzte zeile evtl nur bei partno gesetzt
 
      for ($query_variant) {   #die abfragevariante entscheidet, wie der querystring weitergeht
-         if (/2/)  { $select2 .= " WHERE (`focus_data`.`shipmentno` in ($var_shipmentno))";}     # do something else
-         elsif (/3/)  { $select2 .= " WHERE (`focus_data`.`shipmentno` in ($var_shipmentno)) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
-         elsif (/4/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono))";}     # do something else
-         elsif (/5/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono)) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
-         elsif (/6/)  { }     # do something else
-         elsif (/7/)  { }     # do something else
-         elsif (/8/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono))"; }     # do something else
-         elsif (/9/)  {$select2 .= " WHERE (`focus_data`.`cono` in ($var_cono)) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
-         elsif (/10/)  { }     # do something else
-         elsif (/11/)  { }     # do something else
-         elsif (/12/)  { }     # do something else
-         elsif (/13/)  { }     # do something else
-         elsif (/14/)  { }     # do something else
-        else            { }     # default
+         if (/02/)      { $select2 .= " WHERE `focus_data`.`shipmentno` in ($var_shipmentno)";}     # do something else
+         elsif (/03/)   { $select2 .= " WHERE `focus_data`.`shipmentno` in ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
+         elsif (/04/)   { $select2 .= " WHERE `focus_data`.`cono` in ($var_cono)";}     # do something else
+         elsif (/05/)   { $select2 .= " WHERE `focus_data`.`cono` in ($var_cono) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
+         elsif (/06/)   { $select2 .= " WHERE `focus_data`.`cono` IN ($var_cono) AND `focus_data`.`shipmentno` IN ($var_shipmentno)"; }     # do something else
+         elsif (/07/)   { $select2 .= " WHERE `focus_data`.`cono` IN ($var_cono) AND `focus_data`.`shipmentno` IN ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
+         elsif (/08/)   { $select2 .= " WHERE `focus_data`.`cono` in ($var_cono)"; }     # do something else
+         elsif (/09/)   { $select2 .= " WHERE `focus_data`.`cono` in ($var_cono) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
+         elsif (/10/)  { $select2 .= " WHERE `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno)";}     # do something else
+         elsif (/11/)  { $select2 .= " WHERE `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
+         elsif (/12/)  { $select2 .= " WHERE `focus_data`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno)";}     # do something else
+         elsif (/13/)  { $select2 .= " WHERE `focus_data`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
+         elsif (/14/)  { $select2 .= " WHERE `focus_data`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno)";}     # do something else
+        else           { $select2 .= " WHERE `focus_data`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)";}     # default
      }
 
      $select2 .= " ORDER by `lm1_data`.`ack_date`";         #die sortierreihenfolge
-print "<br>Select2: $select2<br>\n";
+print "<br>Select2: $select2<br><br>\n";
      my $dbh2 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
      my $sth2 = $dbh2->prepare($select2);
      $sth2->execute();
@@ -271,7 +336,7 @@ print "<br>Select2: $select2<br>\n";
           $liste_lgmboxno = "";
 
      }
-
+print "<br>liste shipment: $liste_shipmentno <br> liste boxno: $liste_lgmboxno<br><br>\n";
      return ($liste_shipmentno, $liste_lgmboxno);      #es werden ZWEI werte zurückgegeben
 }
 
