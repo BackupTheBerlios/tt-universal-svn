@@ -2,8 +2,8 @@
 
 if ($debug) {print "Debug tt_paratemers\n"};
 
-$STAT_DB = 's_stat';        #Name der Stat Datenbank
-# $STAT_DB = 'trackandtrace';        #Name der Stat Datenbank
+# $STAT_DB = 's_stat';        #Name der Stat Datenbank
+$STAT_DB = 'trackandtrace';        #Name der Stat Datenbank
 $DB_HOST = 'localhost';		#Rechnername auf dem die MySQL DB liegt
 $DB_TYPE = 'DBI:mysql:'.$STAT_DB.':'.$DB_HOST;	#DBI Zugriffsparameter für mysql
 
@@ -11,15 +11,16 @@ $STAT_DB_USER = 'root';    #Username für zugriff auf DB
 $STAT_DB_PASS = '';        #passwort für zugriff auf DB
 
 $LOG_TABLE = 'import_log';                   #name der logging tabelle
-$SERVER_NAME = 'http://localhost';           #name des servers für url
-$SERVER_PATH = '';                           #subdir des servers für url ACHTUNG! MIT abschliessendem Slash!
+# $SERVER_NAME = 'http://localhost';           #name des servers für url
+$SERVER_NAME = 'http://stat.spicers.de';           #name des servers für url
+$SERVER_PATH = 'trackandtrace/';                           #subdir des servers für url ACHTUNG! MIT abschliessendem Slash!
 $SERVER_MAIN_FILENAME = 'searchdata.pl';     #name des hauptscripts
 
 # $STAT_STARTDIR = 'C:/down/spicers';                                      #wo liegen die daten der anwendung
 # $STAT_STARTDIR = 'C:/Down/gls';
 # $STAT_STARTDIR = '//gringots/netzdaten/win_data/projekte/spicers';    #wo liegen die daten der anwendung
-# $STAT_STARTDIR = '/spicers/trackandtrace';
-$STAT_STARTDIR = 'D:\down\spicers-down';
+$STAT_STARTDIR = '/spicers/trackandtrace';
+# $STAT_STARTDIR = 'D:\down\spicers-down';
 $STAT_SAVEDIR = 'save';                                               #wo werden die eingelesenen files abgelegt
 
 $FOC_IMPORTDIR = 'daten-focus';                                       #wo liegen die focus daten
