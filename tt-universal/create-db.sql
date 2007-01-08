@@ -213,7 +213,9 @@ CREATE TABLE `gls_parcel_out` (
 
 -- Comment
 -- 20070101 gepart:  `shipmentno` int(10) unsigned default NULL,
+-- 20070108 gepart: not NULL default 0
 -- 20070101 lm1_data: ALTER TABLE `lm1_data` CHANGE `lmboxno` `lgmboxno` INT( 10 ) UNSIGNED NULL DEFAULT NULL
 -- 20070101 nightSTAR ist richtig
 -- 20070101 dhl_easylog1: `lgmboxno` int(10) unsigned default NULL,
+-- 20070108 dhl_easylog1: not NULL default 0
 --
