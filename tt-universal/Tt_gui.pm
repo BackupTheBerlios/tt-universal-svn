@@ -1,4 +1,4 @@
-
+#TODO alle direkt kodierten tabellen durch VARs ersetzen
 sub init_search () {
 }
 
@@ -461,7 +461,7 @@ sub query_nightstar($){
      $sth6->execute();
      $dbh5->disconnect();
 
-     if ($sth5->rows gt 0 ) {                 #wenn was gefunden wurde
+     if ($sth6->rows gt 0 ) {                 #wenn was gefunden wurde
           print "<font color=\"#FF0000\">\n";
           print "<br>FEHLER!<br>Für die folgenden cono's wurde kein Nighstar Ausgang gefunden, obwohl sie im LM entsprechend markiert sind:\n";
           print "<br>\n";
