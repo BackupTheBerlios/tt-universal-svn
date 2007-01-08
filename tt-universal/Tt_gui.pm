@@ -243,7 +243,7 @@ sub show_cono_detail ($) {
 ###########################################
 
      my $cono_var = $_[0];
-     my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main ("",$cono_var,"","","8"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+     my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main ("",$cono_var,"","","08"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
      if ($liste_shipmentno && $liste_lgmboxno) {
           query_gls_gepard ($liste_shipmentno);
           query_dhl_easylog ($liste_lgmboxno);
