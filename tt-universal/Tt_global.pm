@@ -2,7 +2,7 @@
 if ($debug) {print "Debug Global pm\n"};
 
 ###########################################
-sub trim($) {
+sub trim($) {                      #param: string
 ###########################################
   my $string = shift;
   $string =~ s/^\s+//;
@@ -12,7 +12,7 @@ sub trim($) {
 
 ###########################################
 # Left trim function to remove leading whitespace
-sub ltrim($) {
+sub ltrim($) {                     #param: string
 ###########################################
   my $string = shift;
   $string =~ s/^\s+//;
@@ -21,7 +21,7 @@ sub ltrim($) {
 
 ###########################################
 # Right trim function to remove trailing whitespace
-sub rtrim($) {
+sub rtrim($) {                     #param: string
 ###########################################
   my $string = shift;
   $string =~ s/\s+$//;
@@ -30,7 +30,7 @@ sub rtrim($) {
 
 ###########################################
 # Write entry in log db
-sub write_log_entry($$$$) {
+sub write_log_entry($$$$) {        #param: quelle, kategorie, text, anzahl der bearbeiteten zeilen
 ###########################################
 
   my $log_source = $_[0];
@@ -174,7 +174,7 @@ VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$z
 }
 
 ###########################################
-sub move2save($$$;$) {
+sub move2save($$$;$) {             #param: woher, wohin, dateiname, (opt) warehouse
 ###########################################
      my $warehouse;
      my $from_dir = $_[0];
@@ -210,7 +210,7 @@ sub move2save($$$;$) {
 }
 
 ###########################################
-sub get_timestamp(;$) {
+sub get_timestamp(;$) {            #param: (opt) timestampformat
 ###########################################
 
     my ($format) = @_;
@@ -240,7 +240,7 @@ sub get_timestamp(;$) {
 
 ###########################################
 # get all dhl easylog data
-sub get_dhl1($) {
+sub get_dhl1($) {                  #param: warehouse
 ###########################################
 $debug = 1;
      if ($debug) {print "Debug Start get_dhl1\n"};
@@ -384,7 +384,7 @@ $debug = 1;
 
 ###########################################
 # get all gls data
-sub get_gls1($) {
+sub get_gls1($) {                  #param: warehouse
 ###########################################
 $debug = 1;
      if ($debug) {print "Debug Start get_gls1\n"};
@@ -516,7 +516,7 @@ $debug = 1;
 
 ###########################################
 # get all data from nightstar that are sent
-sub get_nightstar_send1($) {
+sub get_nightstar_send1($) {       #param: warehouse
 ###########################################
 $debug = 1;
      if ($debug) {print "Debug Start get_nightstar_send1\n"};
@@ -652,7 +652,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
 
 ###########################################
 # reformat date from german to iso
-sub date_switch($) {
+sub date_switch($) {               #param: datumformat mit 8 stellen (dd.mm.yy) oder 10 stellen (dd.mm.yyyy)
 ###########################################
      my $date_in = $_[0];                         #das datum wie es übergeben wurde
      my $date_return;
@@ -660,7 +660,7 @@ sub date_switch($) {
      if (length ($date_in) == 8 ) {               #Datumsformat 8 stellen? dd.mm.yy
           $date_return = "20".substr ($date_in,6,2)."-".substr ($date_in,3,2)."-".substr ($date_in,0,2);
      }
-     elsif (length ($date_in) == 10 ) {           #Datumsformat 10 stellen? dd.mm.yy
+     elsif (length ($date_in) == 10 ) {           #Datumsformat 10 stellen? dd.mm.yyyy
           $date_return = substr ($date_in,6,4)."-".substr ($date_in,3,2)."-".substr ($date_in,0,2);
      }
      else {
@@ -672,7 +672,7 @@ sub date_switch($) {
 ###########################################
 # split string into country zipcode and city
 # sample: ( $x, $y, $z ) = &splitcountry("9999 examplecity")
-sub splitcountry($) {
+sub splitcountry($) {              #param: string mit plz ort
 ###########################################
 my $splitstring = $_[0];
      if ( $splitstring =~ m/^[A-Z]+-/ ) {    # Landeskennzeichen vorhanden
@@ -686,7 +686,7 @@ my $splitstring = $_[0];
 
 ###########################################
 # get all data from nightstar that are sent
-sub get_nightstar_receive1($) {
+sub get_nightstar_receive1($) {    #param: warehouse
 ###########################################
 $debug = 1;
      if ($debug) {print "Debug Start get_nightstar_receive1\n"};
@@ -791,7 +791,7 @@ $debug = 1;
 
 ###########################################
 # get all data from gls kdpaket.dat file
-sub process_glsfile1($) {
+sub process_glsfile1($) {          #param: warehouse
 ###########################################
 $debug = 1;
      if ($debug) {print "Debug process_glsfile1\n"};
@@ -806,6 +806,7 @@ $debug = 1;
      my $rec_format;
      my $temp;
      my $countcolumn;
+     my $timestamp = get_timestamp();   #ein timestamp für alle zeilen
 
 
      #get filelist
@@ -876,18 +877,12 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
                $temp = pop (@zeile);                           #sonst 1 spaltelöschen, ggf. linux
                push @zeile,$warehouse;                   #und dann stockno
              }
-             if (not(search_db("dhl_easylog1","$warehouse","shipmentno","$zeile[17]")) && not(search_db("dhl_nightplus1_out","$warehouse","shipmentno","$zeile[17]")) ) {  #lieferschein nicht gefunden in dhl oder nightplus
-                  push @zeile, get_timestamp();          #checkin_date = jetzt
-                  push @zeile, '';                       #checkout_date = nix
-                  push @zeile, '0';                      #status = 0 (false)
-             }
-             else {
-                  push @zeile, get_timestamp();          #checkin_date = jetzt
-                  push @zeile, '';                       #checkout_date = nix
-                  push @zeile, '1';                      #status = 1 (true)
-             }
+#             if (not(search_db("dhl_easylog1","$warehouse","shipmentno","$zeile[17]")) && not(search_db("dhl_nightplus1_out","$warehouse","shipmentno","$zeile[17]")) ) {  #lieferschein nicht gefunden in dhl oder nightplus
+             push @zeile,$timestamp;              #checkin_date = jetzt
+             push @zeile, '';                     #checkout_date = nix
+             push @zeile, '1';                    #status = 1 (true)
 # TODO gls_parcel insert IGNORE ist richtig?
-              $sql = "INSERT IGNORE INTO `gls_parcel_out` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`, `checkin_date`, `checkout_date`, `status`)
+              $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`, `checkin_date`, `checkout_date`, `status`)
                        VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20])";
 # TODO aktivieren sql gls_parcel
               $dbhandle->do($sql);
@@ -908,14 +903,19 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
 
      #create logfile entry
      write_log_entry("process_glsfile1","INFO","READ END","$countvar");
-
+#jetzt alle zeilen wieder einlesen
+#zeile für zeile auf übereinstimmung in den anderen db testen
+#zeile für zeile status ändern (2 = nicht gefunden, 3=gefunden in tabelle x, 4=gefunden in tabelle y, etc.)
+#alle zeilen rausholen, die status =2 haben und keinen wert in checkout_date und csv bauen
+#csv per ftp wegschicken
+#
      if ($debug) {print "Debug Ende process_glsfile1\n"};
      return 1;
 }
 
 ###########################################
 # find any data in given db and row
-sub search_db($$$$) {
+sub search_db($$$$) {              #param: tabelle, warehouse, suchfeld, suchwert
 ###########################################
     my $table = $_[0];
     my $warehouse = $_[1];
@@ -928,7 +928,7 @@ sub search_db($$$$) {
     my $sth = $search_dbhandle->prepare($select1);
 # print "Select1: $select1\n";
     $sth->execute();
-     if ($sth->fetchrow_array ) {                 #wenn was gefunden wurde
+     if ($sth->rows gt 0 ) {                 #wenn was gefunden wurde
           $retval = "1";
 # print "Select1: if erfuellt\n";
      }
@@ -939,6 +939,74 @@ sub search_db($$$$) {
      $search_dbhandle->disconnect();
      return $retval;
 }
+
+###########################################
+# put file on server via ftp
+sub send_ftp2server ($$$$$) {      #params; file, user, pass, host, path
+###########################################
+     my $file2send = $_[0];
+     my $ftpuser = $_[1];
+     my $ftppass = $_[2];
+     my $ftphost = $_[3];
+     my $ftppath = $_[4];
+     my $retval = 0;               #rückgabewert 0=fehler, 1=OK
+
+     my $ftp=Net::FTP->new($ftphost, Debug=>0);
+     if ($ftp->login($ftpuser, $ftppass)) {
+          if ($ftp->cwd("$ftppath")){
+               $ftp->ascii();                # wechselt in ASCII Modus
+               if ($ftp->put("$file2send")) {
+                    $retval = 1;
+               }
+               else {
+                    print "Can't upload file $file2send on Server $ftphost: ", $ftp->message, "\n";
+               }
+          }
+          else {    #chdir hat nicht funktioniert
+               print "Can't change FTP Path to $ftppath on Server $ftphost: ", $ftp->message, "\n";
+          }
+          $ftp->quit;
+     }
+     else {         #login hat nicht funktioniert
+           print "Can't logon to $ftphost: ", $ftp->message, "\n";
+     }
+     return $retval;
+}
+
+###########################################
+# get file from ftp server and store locally
+sub get_fromftpserver ($$$$$$) {   #params; file, user, pass, host, path, local directory
+###########################################
+     my $file2get = $_[0];
+     my $ftpuser = $_[1];
+     my $ftppass = $_[2];
+     my $ftphost = $_[3];
+     my $ftppath = $_[4];
+     my $localdir = $_[5];
+     my $retval = 0;               #rückgabewert 0=fehler, 1=OK
+
+     my $ftp=Net::FTP->new($ftphost, Debug=>0);
+     if ($ftp->login($ftpuser, $ftppass)) {
+          if ($ftp->cwd("$ftppath")){
+               $ftp->ascii();                # wechselt in ASCII Modus
+               if ($ftp->get("$file2get","$localdir/$file2get")) {    #datei holen
+                    $retval = 1;
+               }
+               else {
+                    print "Can't download file $file2get from Server $ftphost: ", $ftp->message, "\n";
+               }
+          }
+          else {    #chdir hat nicht funktioniert
+               print "Can't change FTP Path to $ftppath on Server $ftphost: ", $ftp->message, "\n";
+          }
+          $ftp->quit;
+     }
+     else {         #login hat nicht funktioniert
+           print "Can't logon to $ftphost: ", $ftp->message, "\n";
+     }
+     return $retval;
+}
+
 
 ###########################################
 # END of module
