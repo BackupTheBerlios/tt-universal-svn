@@ -28,16 +28,26 @@ my $STAT_DB_USER = 'root';    #Username für zugriff auf DB
 my $STAT_DB_PASS = '';        #passwort für zugriff auf DB
 
 
-
-
 $| = 1;                     # don't buffer STDOUT (for EPIC use)
 
 #=============== MAIN =====================
 if ($debug) {print get_timestamp()," ScriptStart!\n"};
-process_glsfile1('160');
+# process_glsfile1('160');
 # process_glsfile1('210');
+#if (send_ftp2server ("d:/down/kdpaket.dat","$GLS_FTPUSER160","$GLS_FTPPASS160","$GLS_FTPHOST160","$GLS_FTPPATH160")) {
+#     print "FTP hat geklappt\n";
+#}
+#else {
+#     print "FTP FEHLGESCHLAGEN!\n";
+#}
+if (get_fromftpserver ("kdpaket.dat","$GLS_FTPUSER160","$GLS_FTPPASS160","$GLS_FTPHOST160","$GLS_FTPPATH160","d:/down")) {
+     print "FTP holen hat geklappt\n";
+}
+else {
+     print "FTP holen FEHLGESCHLAGEN!\n";
+}
+
 if ($debug) {print get_timestamp()," ScriptEnde!\n"};
 #=============== END MAIN =================
-
 
 
