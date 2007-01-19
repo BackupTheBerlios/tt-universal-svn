@@ -791,7 +791,7 @@ $debug = 1;
 
 ###########################################
 # get all data from gls kdpaket.dat file
-sub process_glsfile1($) {          #param: warehouse
+sub process_glsfile1_read($) {          #param: warehouse
 ###########################################
 $debug = 1;
      if ($debug) {print "Debug process_glsfile1\n"};
@@ -860,7 +860,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
              for (my $i=0;$i<=$#zeile;$i++) {
                  $zeile[$i] = trim($zeile[$i]);             #werte trimmen
                  if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
-                   $zeile[$i] = 'DEFAULT';
+                   $zeile[$i] = '\'\'';
                  } else { #was drin? dann verpacken
                    $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
                    $zeile[$i] = "\'".$zeile[$i]."\'";
@@ -879,13 +879,13 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
              }
 #             if (not(search_db("dhl_easylog1","$warehouse","shipmentno","$zeile[17]")) && not(search_db("dhl_nightplus1_out","$warehouse","shipmentno","$zeile[17]")) ) {  #lieferschein nicht gefunden in dhl oder nightplus
              push @zeile,$timestamp;              #checkin_date = jetzt
-             push @zeile, '';                     #checkout_date = nix
+             push @zeile, '\'\'';                     #checkout_date = nix
              push @zeile, '1';                    #status = 1 (true)
 # TODO gls_parcel insert IGNORE ist richtig?
               $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`, `checkin_date`, `checkout_date`, `status`)
                        VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20])";
 # TODO aktivieren sql gls_parcel
-              $dbhandle->do($sql);
+               $dbhandle->do($sql);
 #               print "SQL: ",$sql,"\n";
               $countvar++;
 # if ($countvar == 3 ) {exit;}     #für debugzwecke
