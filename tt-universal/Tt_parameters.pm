@@ -17,9 +17,9 @@ $SERVER_PATH = 'trackandtrace/';                           #subdir des servers f
 $SERVER_MAIN_FILENAME = 'searchdata.pl';     #name des hauptscripts
 
 # $STAT_STARTDIR = 'C:/down/spicers';                                      #wo liegen die daten der anwendung
-# $STAT_STARTDIR = 'C:/Down/gls';
+$STAT_STARTDIR = 'C:/Down/gls';
 # $STAT_STARTDIR = '//gringots/netzdaten/win_data/projekte/spicers';    #wo liegen die daten der anwendung
-$STAT_STARTDIR = '/spicers/trackandtrace';
+# $STAT_STARTDIR = '/spicers/trackandtrace';
 # $STAT_STARTDIR = 'D:\down\spicers-down';
 $STAT_SAVEDIR = 'save';                                               #wo werden die eingelesenen files abgelegt
 
