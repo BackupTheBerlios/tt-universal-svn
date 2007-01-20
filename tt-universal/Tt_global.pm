@@ -860,7 +860,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
              for (my $i=0;$i<=$#zeile;$i++) {
                  $zeile[$i] = trim($zeile[$i]);             #werte trimmen
                  if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
-                   $zeile[$i] = '\'\'';
+                   $zeile[$i] = 'NULL';
                  } else { #was drin? dann verpacken
                    $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
                    $zeile[$i] = "\'".$zeile[$i]."\'";
@@ -879,7 +879,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
              }
 #             if (not(search_db("dhl_easylog1","$warehouse","shipmentno","$zeile[17]")) && not(search_db("dhl_nightplus1_out","$warehouse","shipmentno","$zeile[17]")) ) {  #lieferschein nicht gefunden in dhl oder nightplus
              push @zeile,$timestamp;              #checkin_date = jetzt
-             push @zeile, '\'\'';                     #checkout_date = nix
+             push @zeile, 'NULL';                     #checkout_date = nix
              push @zeile, '1';                    #status = 1 (true)
 # TODO gls_parcel insert IGNORE ist richtig?
               $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`, `checkin_date`, `checkout_date`, `status`)
