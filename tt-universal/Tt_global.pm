@@ -156,7 +156,7 @@ sub get_lm1 {
                     $zeile[$i] = "\'".$zeile[$i]."\'";
                   }
              }
-             my $sql = "INSERT IGNORE INTO `$LM1_TABLENAME` ( `stockno` , `custno` , `picklistno` , `shipmentno` , `picklistrowpos` , `rec_date` , `ack_date` , `carrier` , `lmboxno` , `carrierboxno` )
+             my $sql = "INSERT IGNORE INTO `$LM1_TABLENAME` ( `stockno` , `custno` , `picklistno` , `shipmentno` , `picklistrowpos` , `rec_date` , `ack_date` , `carrier` , `lgmboxno` , `carrierboxno` )
 VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9])";
              $dbhandle->do($sql) or warn "do sql error:\n$sql\nDBI Error: $DBI::errstr";
              $countvar++;
@@ -882,7 +882,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
              push @zeile, 'NULL';                     #checkout_date = nix
              push @zeile, '1';                    #status = 1 (true)
 # TODO gls_parcel insert IGNORE ist richtig?
-              $sql = "INSERT IGNORE INTO `$GLS_GEP1_TABLENAME` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`, `checkin_date`, `checkout_date`, `status`)
+              $sql = "INSERT IGNORE INTO `$GLS_OUT1_TABLENAME` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`, `checkin_date`, `checkout_date`, `status`)
                        VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20])";
 # TODO aktivieren sql gls_parcel
                $dbhandle->do($sql);
