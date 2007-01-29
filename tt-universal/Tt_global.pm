@@ -1106,47 +1106,28 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
 
   my $timestamp = $_[0];
   my $stockno = $_[1];
-#  my $sth;                              #statement handle sql
   my $count = 0;
-  my @rowxx;
+  my $var1;
   my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
-  my $sql = "SELECT g . carrierboxno , g . shipdate , g . gls_custno , "
+  my $sql = "SELECT g . carrierboxno , date_format(g . shipdate,'%Y%m%d') , g . gls_custno , "
         . " g . weight , g . gls_product , g . gls_epl_number , "
-        . " g . tournumber , g . checkdate , g . country , g . zipcode , "
+        . " g . tournumber , date_format(g . checkdate,'%Y%m%d') , g . country , g . zipcode , "
         . " g . freight_terms , g . gls_trunc , g . custno , g . name , "
         . " g . street , g . city , g . shipmentno "
         . " FROM gls_parcel_out g "
-        . " WHERE g . checkin_date = \'$timestamp\' AND g.stockno = \'$stockno\' AND g.status = \'1\'";
-
-     my $dbh = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
-     my $sth = $dbh->prepare($sql);
-     $sth->execute();
-#     $dbh->disconnect();
-
-#     if ($sth->rows gt 0 ) {                 #wenn was gefunden wurde
-          while(my $row = $sth->fetchrow_arrayref){
-               $count++;
-               $var1 = $count . join(';',@row);
-               print "$var1\n";
-          }
-          print "TEST ENDE\n";
-     }
-#     else {
-#          print "Keine Daten gefunden!\n";
-#     }
-
-
-#  $dbhandle->do($sql) or warn "\nERROR. SQL: $sql\n";
-#  foreach my $row ($sth->fetchrow_arrayref()){
-#print ".HIER\n";
-#        $count++;
-#        $var1 = join("|",@row);
-#        print "$var1\n";
-#  }
-#       print ".FERTIG\n";
-#  $dbhandle->disconnect();
+#        . " WHERE g . checkin_date = \'$timestamp\' AND g.stockno = \'$stockno\' AND g.status = \'1\'";
+        . " WHERE g.stockno = \'$stockno\' AND g.status = \'1\'";
+  my $sth = $dbhandle->prepare($sql);
+  $sth->execute();
+  while (@row=$sth->fetchrow_array()) {
+        $count++;
+        $var1 = join("|",@row);
+        print "$var1\n";
+  }
+  print ".FERTIG $count Zeilen.\n";
+  $dbhandle->disconnect();
   return 1;
-#}
+}
 
 
 ###########################################
