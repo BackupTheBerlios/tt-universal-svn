@@ -72,7 +72,7 @@ sub showsearchform () {
               print "<br>\n";
               #TODO select bauen für jede wertekombination eine funktion bauen
               #TODO auswahl funktion gemäß der eingegebenen daten
-print "Countvar: $countvar<br />\n";
+# print "Countvar: $countvar<br />\n";
               if ($countvar eq 2) {     #shipmentno
                     my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","","$shipmentno","","02"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
                          if ($liste_shipmentno && $liste_lgmboxno) {
@@ -206,7 +206,7 @@ sub show_cono_level1($;$) {
           $select1 .= " and partno = '$partno_var'";
      }
      $select1 .= " and status = '2' order by cono";
-     print "<br>Select: $select1 <br>\n";
+#print "<br>Select: $select1 <br>\n";
 
      my $dbh = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
      my $sth = $dbh->prepare($select1);
@@ -221,7 +221,9 @@ sub show_cono_level1($;$) {
 
      if ($sth->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names = @{$sth->{NAME}};
-          print "<h1>Test Überschrift custno: $custno_var partno: $partno_var</h1>";
+#          print "<h1>Test Überschrift custno: $custno_var partno: $partno_var</h1>";
+          print "<h1>custno: $custno_var partno: $partno_var</h1>";
+
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names)."\n";
           while(my $row = $sth->fetchrow_hashref()){
                $count++;
@@ -265,11 +267,11 @@ sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,
      my $liste_shipmentno;    #var für rückgabeliste1
      my $liste_lgmboxno;      #var für rückgabeliste2
 
-if ($var_custno ) {print"<br>var custno def: $var_custno"};
-if ($var_cono ) {print"<br>var cono def: $var_cono "};
-if ($var_shipmentno  ) {print"<br>var shipmentno def: $var_shipmentno "};
-if ($var_partno  ) {print"<br>var partno def: $var_partno "};
-if ($query_variant  ) {print"<br>var query variant def: $query_variant <br>"};
+#if ($var_custno ) {print"<br>var custno def: $var_custno"};
+#if ($var_cono ) {print"<br>var cono def: $var_cono "};
+#if ($var_shipmentno  ) {print"<br>var shipmentno def: $var_shipmentno "};
+#if ($var_partno  ) {print"<br>var partno def: $var_partno "};
+#if ($query_variant  ) {print"<br>var query variant def: $query_variant <br>"};
 
      print "<br>Ergebnisse aus LM:<br>\n";
 
@@ -308,7 +310,7 @@ if ($query_variant  ) {print"<br>var query variant def: $query_variant <br>"};
      }
 
      $select2 .= " ORDER by `lm1_data`.`ack_date`";         #die sortierreihenfolge
-print "<br>Select2: $select2<br><br>\n";
+# print "<br>Select2: $select2<br><br>\n";
      my $dbh2 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
      my $sth2 = $dbh2->prepare($select2);
      $sth2->execute();
@@ -336,7 +338,7 @@ print "<br>Select2: $select2<br><br>\n";
           $liste_lgmboxno = "";
 
      }
-print "<br>liste shipment: $liste_shipmentno <br> liste boxno: $liste_lgmboxno<br><br>\n";
+# print "<br>liste shipment: $liste_shipmentno <br> liste boxno: $liste_lgmboxno<br><br>\n";
      return ($liste_shipmentno, $liste_lgmboxno);      #es werden ZWEI werte zurückgegeben
 }
 
