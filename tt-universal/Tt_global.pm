@@ -1108,13 +1108,13 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
 
   my $timestamp = $_[0];
   my $stockno = $_[1];
-  my $sth;                              #statement handle sql
+#  my $sth;                              #statement handle sql
   my $num_aff_row;
   my $timestamp_out = get_timestamp();
   my $var1;
   my $count = 0;
   my @row;
-  my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+#  my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
   my $sql = "SELECT g . carrierboxno , g . shipdate , g . gls_custno , "
         . " g . weight , g . gls_product , g . gls_epl_number , "
         . " g . tournumber , g . checkdate , g . country , g . zipcode , "
@@ -1122,15 +1122,34 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
         . " g . street , g . city , g . shipmentno "
         . " FROM gls_parcel_out g "
         . " WHERE g . checkin_date = \'$timestamp\' AND g.stockno = \'$stockno\' AND g.status = \'1\'";
-  $dbhandle->do($sql) or warn "\nERROR. SQL: $sql\n";
-  foreach my $row ($sth->fetchrow_arrayref()){
-print ".HIER\n";
-        $count++;
-        $var1 = join("|",@row);
-        print "$var1\n";
-  }
-       print ".FERTIG\n";
-  $dbhandle->disconnect();
+
+     my $dbh = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+     my $sth = $dbh->prepare($sql);
+     $sth->execute();
+     $dbh->disconnect();
+
+     if ($sth->rows gt 0 ) {                 #wenn was gefunden wurde
+          while($row = $sth->fetchrow_hashref()){
+               $count++;
+               $var1 = join("|",$row);
+               print $var1;
+          }
+          print "TEST ENDE\n";
+     }
+     else {
+          print "Keine Daten gefunden!\n";
+     }
+
+
+#  $dbhandle->do($sql) or warn "\nERROR. SQL: $sql\n";
+#  foreach my $row ($sth->fetchrow_arrayref()){
+#print ".HIER\n";
+#        $count++;
+#        $var1 = join("|",@row);
+#        print "$var1\n";
+#  }
+#       print ".FERTIG\n";
+#  $dbhandle->disconnect();
   return 1;
 }
 
