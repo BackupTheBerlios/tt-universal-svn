@@ -16,7 +16,7 @@ $SERVER_NAME = 'http://stat.spicers.de';           #name des servers für url
 $SERVER_PATH = 'trackandtrace/';                           #subdir des servers für url ACHTUNG! MIT abschliessendem Slash!
 $SERVER_MAIN_FILENAME = 'searchdata.pl';     #name des hauptscripts
 
-# $STAT_STARTDIR = 'C:/down/spicers';                                      #wo liegen die daten der anwendung
+$STAT_STARTDIR = 'C:/down/spicers';                                      #wo liegen die daten der anwendung
 # $STAT_STARTDIR = 'C:/Down/gls';
 # $STAT_STARTDIR = '//gringots/netzdaten/win_data/projekte/spicers';    #wo liegen die daten der anwendung
 # $STAT_STARTDIR = '/spicers/trackandtrace';
