@@ -43,7 +43,7 @@ elsif ($level eq 'scd') {                         #scd show cono detail
 else { # unbekannter Runmode
     print '<br>Runmode Fehler <br>';
 }
-print "<br>Fertig.<br>";
+# print "<br>Fertig.<br>";
 print $q->end_html();
 
 #=============== END MAIN =====================
