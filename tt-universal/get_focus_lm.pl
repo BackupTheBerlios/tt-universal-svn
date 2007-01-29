@@ -23,7 +23,6 @@ get_focus();
 get_lm1();
 if ($debug) {print get_timestamp()," ScriptEnde!\n"};
 #=============== END MAIN =================
-
 # ALTER TABLE `focus_data` ADD INDEX ( `custno` ) ;
 # ALTER TABLE `focus_data` ADD INDEX ( `partno` ) ;
 # ALTER TABLE `focus_data` ADD INDEX ( `picklistno` ) ;
