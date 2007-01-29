@@ -18,22 +18,29 @@ use DBI;
 use File::Copy;
 use Net::FTP;
 
-# http://www.tekromancer.com/perl2/12_1.html
-# http://www.schockwellenreiter.de/perl/ftp.html
-
-#my $STAT_DB = 's_stat';        #Name der Stat Datenbank
-#my $DB_HOST = 'localhost';		#Rechnername auf dem die MySQL DB liegt
-#my $DB_TYPE = 'DBI:mysql:'.$STAT_DB.':'.$DB_HOST;	#DBI Zugriffsparameter für mysql
-#
-#my $STAT_DB_USER = 'root';    #Username für zugriff auf DB
-#my $STAT_DB_PASS = '';        #passwort für zugriff auf DB
+my $timestamp;
+my $transfer_ok = 0;
 
 
 $| = 1;                     # don't buffer STDOUT (for EPIC use)
 
 #=============== MAIN =====================
 if ($debug) {print get_timestamp()," ScriptStart!\n"};
-process_glsfile1_read('160');
+# $timestamp = process_glsfile1_read('160');        # kdpaket.dat für lager 160 einlesen
+# if ($timestamp gt 0 ) {                           # wenn was eingelesen wurde, auf doppelte aussendung prüfen
+$timestamp = '20070120222752';
+#	comp_p_out_gepart($timestamp);
+#	comp_p_out_dhl_easylog($timestamp);
+#	comp_p_out_nightstar($timestamp);
+	writefile_p_out($timestamp,'160');
+# }
+#$timestamp = process_glsfile1_read('210');        # kdpaket.dat für lager 210 einlesen
+#if ($timestamp gt 0 ) {                           # wenn was eingelesen wurde, auf doppelte aussendung prüfen
+#	comp_p_out_gepart($timestamp);
+#	comp_p_out_dhl_easylog($timestamp);
+#	comp_p_out_nightstar($timestamp);
+#}
+
 # process_glsfile1_read('210');
 #if (send_ftp2server ("d:/down/kdpaket.dat","$GLS_FTPUSER160","$GLS_FTPPASS160","$GLS_FTPHOST160","$GLS_FTPPATH160")) {
 #     print "FTP hat geklappt\n";
@@ -50,5 +57,4 @@ process_glsfile1_read('160');
 
 if ($debug) {print get_timestamp()," ScriptEnde!\n"};
 #=============== END MAIN =================
-
 
