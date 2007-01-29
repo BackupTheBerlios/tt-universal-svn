@@ -11,8 +11,8 @@ $STAT_DB_USER = 'root';    #Username für zugriff auf DB
 $STAT_DB_PASS = '';        #passwort für zugriff auf DB
 
 $LOG_TABLE = 'import_log';                   #name der logging tabelle
-#$SERVER_NAME = 'http://localhost';           #name des servers für url
-$SERVER_NAME = 'http://stat.spicers.de';           #name des servers für url
+$SERVER_NAME = 'http://localhost';           #name des servers für url
+# $SERVER_NAME = 'http://stat.spicers.de';           #name des servers für url
 $SERVER_PATH = 'trackandtrace/';                           #subdir des servers für url ACHTUNG! MIT abschliessendem Slash!
 $SERVER_MAIN_FILENAME = 'searchdata.pl';     #name des hauptscripts
 
