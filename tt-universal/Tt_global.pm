@@ -335,24 +335,22 @@ $debug = 1;
                        $sapo_true = 1;                   #Paketdatensatz erreicht
                   }
              }
-             if ($#zeile == 21 ) {                     #nur 22 spalten? Dann ansprechpartner hinzufügen
-               	push @zeile,'';                        #zeile[22] = dummy
-               	push @zeile,'';                        #zeile[23] = dummy
-             }                #elsif für linux, da hier die letzte spalte mitgezählt wird
-             elsif ($#zeile == 22 ) {                     #nur 23 spalten? Dann ansprechpartner hinzufügen
-               	push @zeile,'';                        #zeile[22] = dummy
+             if ($#zeile lt 25 ){                       #genug records anhängen um mindestns 25 elemente zu haben
+                for(my $i=1;$i<=25;$i++) {
+                     push @zeile,'';
+                }
              }
-             elsif ($#zeile == 24 ) {
-               	pop @zeile;                        #24 spalten? dann eine wegnehmen
-             }
-             push @zeile,$datadate;                        #zeile[24] = datum
-             push @zeile,$warehouse;                       #zeile[25] = stockno
+             $zeile[24] = $datadate;                        #zeile[24] = datum
+             $zeile[25] = $warehouse;                       #zeile[25] = stockno
              if ($sapo_true ) {                            #nur SAPO Sätze wegschreiben
                   for(my $i=0;$i<=$#zeile;$i++) {          #Nochmal durch alle Felder gehen und leere Werte anpassen
                        if ($zeile[$i] eq "") {             # Leerer Wert? Dann DEFAULT Befehl übergeben.
                          $zeile[$i] = 'DEFAULT';
                        } else { #was drin? dann verpacken
-                         $zeile[$i] =~ tr/'//d;             #hochkommas entfernen
+                         $zeile[$i] =~ tr/'//d;            #hochkommas entfernen
+                         if ($i eq 9 ) {                   #bei feld lgmboxno die 4 letzten stellen abschneiden
+	                         $zeile[$i] = substr($zeile[$i],0,length($zeile[$i])-4);
+                         }
                          $zeile[$i] = "\'".$zeile[$i]."\'";
                        }
                   }
@@ -360,7 +358,7 @@ $debug = 1;
                   ( `recordtype` , `rowpos` , `parcelcount` , `packing` , `weight` , `volume` , `length` , `width` , `height` , `lgmboxno` , `carrierboxno` , `routingcode` , `servicecode` , `shipmentno` , `name1` , `name2` , `name3` , `street` , `street_number` , `city` , `zipcode` , `countrycode` , `contactperson1` , `contactperson2` , `credate` , `stockno` )
                   VALUES
                   ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25])";
-                  $dbhandle->do($sql);
+                  $dbhandle->do($sql) or warn "\nERROR. SQL: $sql\nfile: $INFILE_filename\n";
 #                  print $sql,"\n";
                   $countvar++;
              }  # --- end if
@@ -1109,12 +1107,9 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
   my $timestamp = $_[0];
   my $stockno = $_[1];
 #  my $sth;                              #statement handle sql
-  my $num_aff_row;
-  my $timestamp_out = get_timestamp();
-  my $var1;
   my $count = 0;
-  my @row;
-#  my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+  my @rowxx;
+  my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
   my $sql = "SELECT g . carrierboxno , g . shipdate , g . gls_custno , "
         . " g . weight , g . gls_product , g . gls_epl_number , "
         . " g . tournumber , g . checkdate , g . country , g . zipcode , "
@@ -1126,19 +1121,19 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
      my $dbh = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
      my $sth = $dbh->prepare($sql);
      $sth->execute();
-     $dbh->disconnect();
+#     $dbh->disconnect();
 
-     if ($sth->rows gt 0 ) {                 #wenn was gefunden wurde
-          while($row = $sth->fetchrow_hashref()){
+#     if ($sth->rows gt 0 ) {                 #wenn was gefunden wurde
+          while(my $row = $sth->fetchrow_arrayref){
                $count++;
-               $var1 = join("|",$row);
-               print $var1;
+               $var1 = $count . join(';',@row);
+               print "$var1\n";
           }
           print "TEST ENDE\n";
      }
-     else {
-          print "Keine Daten gefunden!\n";
-     }
+#     else {
+#          print "Keine Daten gefunden!\n";
+#     }
 
 
 #  $dbhandle->do($sql) or warn "\nERROR. SQL: $sql\n";
@@ -1151,7 +1146,7 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
 #       print ".FERTIG\n";
 #  $dbhandle->disconnect();
   return 1;
-}
+#}
 
 
 ###########################################
