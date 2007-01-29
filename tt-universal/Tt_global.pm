@@ -910,7 +910,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
 #csv per ftp wegschicken
 #
      if ($debug) {print "Debug Ende process_glsfile1\n"};
-     return 1;
+     return $timestamp;  #timestamp zu weiteren verwendung zurückliefern.
 }
 
 ###########################################
@@ -1005,6 +1005,133 @@ sub get_fromftpserver ($$$$$$) {   #params; file, user, pass, host, path, local 
            print "Can't logon to $ftphost: ", $ftp->message, "\n";
      }
      return $retval;
+}
+
+###########################################
+# compare gls_parcel_out with gepart
+sub comp_p_out_gepart($) {        #param: checkin_date timestamp
+###########################################
+
+  my $timestamp = $_[0];
+  my $sth;                              #statement handle sql
+  my $update_dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+  my $update_sql = "update `$GLS_OUT1_TABLENAME` `a`"
+        . " INNER JOIN `$GLS_GEP1_TABLENAME` `b` "
+        . " ON `a`.`shipmentno` = `b`.`shipmentno` AND "
+        . " `a`.`custno` = `b`.`custno` AND "
+        . " `a`.`stockno` = `b`.`stockno` "
+        . " set `a`.`status` = \'2\' "
+        . " WHERE (`a`.`status` = \'1\') AND "
+        . " (`a`.`checkin_date` = \'$timestamp\')";
+  $sth = $update_dbhandle->prepare($update_sql);                 #query vorbereiten
+  $sth->execute;                                                 #query ausführen
+  $num_aff_row = $sth->rows;                                     #wieviele zeilen hat es getroffen
+  return $num_aff_row;
+}
+
+###########################################
+# compare gls_parcel_out with dhl easylog
+sub comp_p_out_dhl_easylog($) {        #param: checkin_date timestamp; TEST: 20070120222752
+###########################################
+
+  my $timestamp = $_[0];
+  my $sth;                              #statement handle sql
+  my $update_dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+  my $update_sql = "UPDATE `$GLS_OUT1_TABLENAME` `a` "
+        . " INNER JOIN `$LM1_TABLENAME` `c` "
+        . " ON `a`.`custno` = `c`.`custno` "
+        . " INNER JOIN `$DHL_EASY1_TABLENAME` `b` "
+        . " ON `a`.`shipmentno` = `b`.`shipmentno` AND"
+        . " `a`.`stockno` = `b`.`stockno` AND"
+        . " `c`.`lgmboxno` = `b`.`lgmboxno` "
+        . " SET `a`.`status` = \'3\'"
+        . " WHERE"
+        . " (`a`.`status` = \'1\') AND"
+        . " (`a`.`checkin_date` = \'$timestamp\')";
+  $sth = $update_dbhandle->prepare($update_sql);                 #query vorbereiten
+  $sth->execute;                                                 #query ausführen
+  $num_aff_row = $sth->rows;                                     #wieviele zeilen hat es getroffen
+  return $num_aff_row;
+}
+
+###########################################
+# compare gls_parcel_out with nightstar
+sub comp_p_out_nightstar($) {        #param: checkin_date timestamp; TEST: 20070120222752
+###########################################
+
+  my $timestamp = $_[0];
+  my $sth;                              #statement handle sql
+  my $num_aff_row;
+  my $update_dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+  my $update_sql = "update `$GLS_OUT1_TABLENAME` `a`"
+        . " INNER JOIN `$NIGHT1_OUT_TABLENAME` `b` "
+        . " ON `a`.`shipmentno` = `b`.`shipmentno` AND "
+        . " `a`.`custno` = `b`.`custno` AND "
+        . " `a`.`stockno` = `b`.`stockno` "
+        . " set `a`.`status` = \'2\' "
+        . " WHERE (`a`.`status` = \'1\') AND "
+        . " (`a`.`checkin_date` = \'$timestamp\')";
+  $sth = $update_dbhandle->prepare($update_sql);                 #query vorbereiten
+  $sth->execute;                                                 #query ausführen
+  $num_aff_row = $sth->rows;                                     #wieviele zeilen hat es getroffen
+  $update_dbhandle->disconnect();
+  return $num_aff_row;
+}
+
+###########################################
+# update gls_parcel_out for all items sent back to gls
+sub update_p_out_sent_ok($) {        #param: checkin_date timestamp; TEST: 20070120222752
+###########################################
+
+  my $timestamp = $_[0];
+  my $sth;                              #statement handle sql
+  my $num_aff_row;
+  my $timestamp_out = get_timestamp();
+  my $update_dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+  my $update_sql = "update `$GLS_OUT1_TABLENAME` "
+        . " set `status` = \'90\',"
+        . " `checkout_date` = \'$timestamp_out\'"
+        . " WHERE "
+        . " `checkin_date` = \'$timestamp\' and"
+        . " `status` = \'1\'";
+  $sth = $update_dbhandle->prepare($update_sql);                 #query vorbereiten
+  $sth->execute;                                                 #query ausführen
+  $num_aff_row = $sth->rows;                                     #wieviele zeilen hat es getroffen
+  $update_dbhandle->disconnect();
+  return $num_aff_row;
+}
+
+###########################################
+# write gls_parcel_out data to csv file for sending to gls
+sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST: 20070120222752)
+###########################################
+
+  my $timestamp = $_[0];
+  my $stockno = $_[1];
+  my $sth;                              #statement handle sql
+  my $num_aff_row;
+  my $timestamp_out = get_timestamp();
+  my $var1;
+  my $count = 0;
+  my @row;
+  my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+  my $sql = "SELECT g . carrierboxno , g . shipdate , g . gls_custno , "
+        . " g . weight , g . gls_product , g . gls_epl_number , "
+        . " g . tournumber , g . checkdate , g . country , g . zipcode , "
+        . " g . freight_terms , g . gls_trunc , g . custno , g . name , "
+        . " g . street , g . city , g . shipmentno "
+        . " FROM gls_parcel_out g "
+        . " WHERE g . checkin_date = \'$timestamp\' AND g.stockno = \'$stockno\' AND g.status = \'1\'";
+  $dbhandle->do($sql) or warn "\nERROR. SQL: $sql\n";
+  foreach my $row ($sth->fetchrow_arrayref()){
+print ".HIER\n";
+        $count++;
+        $var1 = join("|",@row);
+        print "$var1\n";
+  }
+       print ".FERTIG\n";
+  $dbhandle->disconnect();
+  return 1;
 }
 
 
