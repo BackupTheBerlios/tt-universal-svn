@@ -824,12 +824,12 @@ $debug = 1;
      }
 
      #create logfile entry
-     write_log_entry("process_glsfile1","INFO","READ START STOCKNO $warehouse","");
+     write_log_entry("process_glsfile1_read","INFO","READ START STOCKNO $warehouse","");
 
      if (@filelist lt 1 )
      {
 	    # return early from subdir if dir empty and nothing to do
-        write_log_entry("process_glsfile1","INFO","READ STOP Nothing to do","0");
+        write_log_entry("process_glsfile1_read","INFO","READ STOP Nothing to do","0");
         if ($debug) {print @filelist,"\n"};
         if ($debug) {print "Debug NOTHING TO DO\n"};
 	    return;
@@ -879,34 +879,25 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
              push @zeile,$timestamp;              #checkin_date = jetzt
              push @zeile, 'NULL';                     #checkout_date = nix
              push @zeile, '1';                    #status = 1 (true)
-# TODO gls_parcel insert IGNORE ist richtig?
               $sql = "INSERT IGNORE INTO `$GLS_OUT1_TABLENAME` ( `carrierboxno` , `shipdate` , `gls_custno` , `weight` , `gls_product` , `gls_epl_number` , `tournumber` , `checkdate` , `country` , `zipcode` , `freight_terms` , `gls_trunc` , `custno` , `name` , `street` , `city` , `shipmentno` , `stockno`, `checkin_date`, `checkout_date`, `status`)
                        VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20])";
-# TODO aktivieren sql gls_parcel
                $dbhandle->do($sql);
 #               print "SQL: ",$sql,"\n";
               $countvar++;
-# if ($countvar == 3 ) {exit;}     #für debugzwecke
         }  # --- end while
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
-# TODO aktivieren move2save gls_parcel
+# TODO move2save process_glsfile1_read
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
-#             move2save("$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
+ #            move2save("$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
 #             move2save("$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
         }
-        write_log_entry("process_glsfile1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
+        write_log_entry("process_glsfile1_read","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
 
      #create logfile entry
-     write_log_entry("process_glsfile1","INFO","READ END","$countvar");
-#jetzt alle zeilen wieder einlesen
-#zeile für zeile auf übereinstimmung in den anderen db testen
-#zeile für zeile status ändern (2 = nicht gefunden, 3=gefunden in tabelle x, 4=gefunden in tabelle y, etc.)
-#alle zeilen rausholen, die status =2 haben und keinen wert in checkout_date und csv bauen
-#csv per ftp wegschicken
-#
+     write_log_entry("process_glsfile1_read","INFO","READ END","$countvar");
      if ($debug) {print "Debug Ende process_glsfile1\n"};
      return $timestamp;  #timestamp zu weiteren verwendung zurückliefern.
 }
@@ -1024,6 +1015,7 @@ sub comp_p_out_gepart($) {        #param: checkin_date timestamp
   $sth = $update_dbhandle->prepare($update_sql);                 #query vorbereiten
   $sth->execute;                                                 #query ausführen
   $num_aff_row = $sth->rows;                                     #wieviele zeilen hat es getroffen
+  write_log_entry("comp_p_out_dhl_gepart","INFO","No. of records found: $num_aff_row","0");    #statusinfo
   return $num_aff_row;
 }
 
@@ -1049,6 +1041,7 @@ sub comp_p_out_dhl_easylog($) {        #param: checkin_date timestamp; TEST: 200
   $sth = $update_dbhandle->prepare($update_sql);                 #query vorbereiten
   $sth->execute;                                                 #query ausführen
   $num_aff_row = $sth->rows;                                     #wieviele zeilen hat es getroffen
+  write_log_entry("comp_p_out_dhl_easylog","INFO","No. of records found: $num_aff_row","0");    #statusinfo
   return $num_aff_row;
 }
 
@@ -1072,6 +1065,7 @@ sub comp_p_out_nightstar($) {        #param: checkin_date timestamp; TEST: 20070
   $sth = $update_dbhandle->prepare($update_sql);                 #query vorbereiten
   $sth->execute;                                                 #query ausführen
   $num_aff_row = $sth->rows;                                     #wieviele zeilen hat es getroffen
+  write_log_entry("comp_p_out_nightstar","INFO","No. of records found: $num_aff_row","0");    #statusinfo
   $update_dbhandle->disconnect();
   return $num_aff_row;
 }
@@ -1108,6 +1102,17 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
   my $stockno = $_[1];
   my $count = 0;
   my $var1;
+  my $OUTFILE_filename = "kdpaket.dat.$timestamp"; # output file name
+print "PFAD: $STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR/$OUTFILE_filename\n";
+
+  if ( $stockno eq '160' ) {                        #pfad für stockno 160
+     open ( OUTFILE, '>', "$STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR/$OUTFILE_filename" ) or die "$0 : failed to open  output file $OUTFILE_filename : $!\n";
+  }
+
+  if ( $stockno eq '210' ) {                        #pfad für stockno 160
+     open ( OUTFILE, '>', "$STAT_STARTDIR/$GLS_PARCEL2_EXPORTDIR/$OUTFILE_filename" ) or die "$0 : failed to open  output file $OUTFILE_filename : $!\n";
+  }
+
   my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
   my $sql = "SELECT g . carrierboxno , date_format(g . shipdate,'%Y%m%d') , g . gls_custno , "
         . " g . weight , g . gls_product , g . gls_epl_number , "
@@ -1115,6 +1120,7 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
         . " g . freight_terms , g . gls_trunc , g . custno , g . name , "
         . " g . street , g . city , g . shipmentno "
         . " FROM gls_parcel_out g "
+#    TODO select in ordnung bringen
 #        . " WHERE g . checkin_date = \'$timestamp\' AND g.stockno = \'$stockno\' AND g.status = \'1\'";
         . " WHERE g.stockno = \'$stockno\' AND g.status = \'1\'";
   my $sth = $dbhandle->prepare($sql);
@@ -1122,9 +1128,11 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
   while (@row=$sth->fetchrow_array()) {
         $count++;
         $var1 = join("|",@row);
-        print "$var1\n";
+        print OUTFILE "$var1\n";
   }
   print ".FERTIG $count Zeilen.\n";
+  write_log_entry("writefile_p_out","INFO","Stockno: $stockno FILENAME:$OUTFILE_filename","$count Zeilen");    #statusinfo zu jeder datei
+  close ( OUTFILE ) or warn "$0 : failed to close output file $OUTFILE_filename : $!\n";
   $dbhandle->disconnect();
   return 1;
 }
