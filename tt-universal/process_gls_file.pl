@@ -28,10 +28,11 @@ $| = 1;                     # don't buffer STDOUT (for EPIC use)
 if ($debug) {print get_timestamp()," ScriptStart!\n"};
 # $timestamp = process_glsfile1_read('160');        # kdpaket.dat für lager 160 einlesen
 # if ($timestamp gt 0 ) {                           # wenn was eingelesen wurde, auf doppelte aussendung prüfen
-$timestamp = '20070121132619'; #  20070120222752
-#	comp_p_out_gepart($timestamp);
-#	comp_p_out_dhl_easylog($timestamp);
-#	comp_p_out_nightstar($timestamp);
+# $timestamp = '20070121132619'; #  20070120222752
+$timestamp = '20070120222752';
+	comp_p_out_gepart($timestamp);
+	comp_p_out_dhl_easylog($timestamp);
+	comp_p_out_nightstar($timestamp);
 	writefile_p_out($timestamp,'160');
 # }
 #$timestamp = process_glsfile1_read('210');        # kdpaket.dat für lager 210 einlesen
