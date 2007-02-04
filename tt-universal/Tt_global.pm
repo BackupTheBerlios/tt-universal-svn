@@ -37,6 +37,7 @@ sub write_log_entry($$$$) {        #param: quelle, kategorie, text, anzahl der b
   my $log_cat = $_[1];
   my $log_text = $_[2];
   my $itemcount = $_[3];
+  $log_text =~ tr/'//d;             #hochkommas entfernen
   my $log_dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
   my $log_sql = "INSERT INTO import_log (`count` , `source` , `category` , `logtime` , `remark` , `lines_read` )
   VALUES (NULL ,\'$log_source\',\'$log_cat\', NOW(), \'$log_text\', \'$itemcount\')";
@@ -186,6 +187,8 @@ sub move2save($$$;$) {             #param: woher, wohin, dateiname, (opt) wareho
      else {
          $warehouse = '000';
      }
+
+#print "\nfrom: $from_dir to: $to_dir file: $file\n";
      my $timestamp = get_timestamp();
      my $mon2 = substr($timestamp,4,2);
      my $year2 = substr($timestamp,0,4);
@@ -205,7 +208,7 @@ sub move2save($$$;$) {             #param: woher, wohin, dateiname, (opt) wareho
      mkdir "$to_dir/$year2/$mon2", 0777 or die "mkdir $to_dir/$year2/$mon2 not possibe! $!\n";
      }
 
-#     print "Von: $from_dir \nNach: $to_dir/$year2/$mon2 \nFilename im SUB: $file \nMonat: $mon2 Jahr: $year2 Lager: $warehouse\n";
+#print "Von: $from_dir \nNach: $to_dir/$year2/$mon2 \nFilename im SUB: $file \nMonat: $mon2 Jahr: $year2 Lager: $warehouse\n";
      move("$from_dir/$file","$to_dir/$year2/$mon2/$file\.$timestamp\.$warehouse\.done") or die "move not possible! $!\n";
 }
 
@@ -829,7 +832,7 @@ $debug = 1;
      if (@filelist lt 1 )
      {
 	    # return early from subdir if dir empty and nothing to do
-        write_log_entry("process_glsfile1_read","INFO","READ STOP Nothing to do","0");
+        write_log_entry("process_glsfile1_read","INFO","READ STOP Nothing to do $warehouse","0");
         if ($debug) {print @filelist,"\n"};
         if ($debug) {print "Debug NOTHING TO DO\n"};
 	    return;
@@ -887,11 +890,12 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
         }  # --- end while
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
-# TODO move2save process_glsfile1_read
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
- #            move2save("$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
+             rename ("$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR/$file","$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR/$file.$timestamp.INFILE") or warn "rename not working: $!";  #rename to avoid backup conflicts
+             move2save("$STAT_STARTDIR/$GLS_PARCEL1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file.$timestamp.INFILE","$warehouse");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
-#             move2save("$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
+             rename ("$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR/$file","$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR/$file.$timestamp.INFILE") or warn "rename not working: $!";
+             move2save("$STAT_STARTDIR/$GLS_PARCEL2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file.$timestamp.INFILE","$warehouse");
         }
         write_log_entry("process_glsfile1_read","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
@@ -938,28 +942,28 @@ sub send_ftp2server ($$$$$) {      #params; file, user, pass, host, path
      my $ftppass = $_[2];
      my $ftphost = $_[3];
      my $ftppath = $_[4];
-     my $retval = 0;               #rückgabewert 0=fehler, 1=OK
+     my $retstr = 0;               #rückgabestring 0=fehler, 1=OK
 
      my $ftp=Net::FTP->new($ftphost, Debug=>0);
      if ($ftp->login($ftpuser, $ftppass)) {
           if ($ftp->cwd("$ftppath")){
                $ftp->ascii();                # wechselt in ASCII Modus
                if ($ftp->put("$file2send")) {
-                    $retval = 1;
+                    $retstr = '1';
                }
                else {
-                    print "Can't upload file $file2send on Server $ftphost: ", $ftp->message, "\n";
+                    $retstr = "Can't upload file $file2send on Server $ftphost: ". $ftp->message. "\n";
                }
           }
           else {    #chdir hat nicht funktioniert
-               print "Can't change FTP Path to $ftppath on Server $ftphost: ", $ftp->message, "\n";
+               $retstr = "Can't change FTP Path to $ftppath on Server $ftphost: ". $ftp->message. "\n";
           }
           $ftp->quit;
      }
      else {         #login hat nicht funktioniert
-           print "Can't logon to $ftphost: ", $ftp->message, "\n";
+           $retstr = "Can't logon to $ftphost: ". $ftp->message. "\n";
      }
-     return $retval;
+     return $retstr;
 }
 
 ###########################################
@@ -972,28 +976,28 @@ sub get_fromftpserver ($$$$$$) {   #params; file, user, pass, host, path, local 
      my $ftphost = $_[3];
      my $ftppath = $_[4];
      my $localdir = $_[5];
-     my $retval = 0;               #rückgabewert 0=fehler, 1=OK
+     my $retstr = '0';               #rückgabestring
 
      my $ftp=Net::FTP->new($ftphost, Debug=>0);
      if ($ftp->login($ftpuser, $ftppass)) {
           if ($ftp->cwd("$ftppath")){
                $ftp->ascii();                # wechselt in ASCII Modus
                if ($ftp->get("$file2get","$localdir/$file2get")) {    #datei holen
-                    $retval = 1;
+                    $retstr = '1';
                }
                else {
-                    print "Can't download file $file2get from Server $ftphost: ", $ftp->message, "\n";
+                    $retstr = "Can't download file $file2get from Server $ftphost: ". $ftp->message. "\n";
                }
           }
           else {    #chdir hat nicht funktioniert
-               print "Can't change FTP Path to $ftppath on Server $ftphost: ", $ftp->message, "\n";
+               $retstr = "Can't change FTP Path to $ftppath on Server $ftphost: ". $ftp->message. "\n";
           }
           $ftp->quit;
      }
      else {         #login hat nicht funktioniert
-           print "Can't logon to $ftphost: ", $ftp->message, "\n";
+           $retstr = "Can't logon to $ftphost: ". $ftp->message. "\n";
      }
-     return $retval;
+     return $retstr;
 }
 
 ###########################################
@@ -1072,23 +1076,28 @@ sub comp_p_out_nightstar($) {        #param: checkin_date timestamp; TEST: 20070
 
 ###########################################
 # update gls_parcel_out for all items sent back to gls
-sub update_p_out_sent_ok($) {        #param: checkin_date timestamp; TEST: 20070120222752
+sub update_p_out_sent_ok($$) {        #param: checkin_date timestamp, stockno; TEST: 20070120222752
 ###########################################
 
   my $timestamp = $_[0];
+  my $stockno = $_[1];
   my $sth;                              #statement handle sql
   my $num_aff_row;
   my $timestamp_out = get_timestamp();
+  my $ftp_return;
   my $update_dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
   my $update_sql = "update `$GLS_OUT1_TABLENAME` "
         . " set `status` = \'90\',"
         . " `checkout_date` = \'$timestamp_out\'"
         . " WHERE "
         . " `checkin_date` = \'$timestamp\' and"
+        . " `stockno` = \'$stockno\' and"
         . " `status` = \'1\'";
+#print "\nupdate_sql: $update_sql\n";
   $sth = $update_dbhandle->prepare($update_sql);                 #query vorbereiten
   $sth->execute;                                                 #query ausführen
   $num_aff_row = $sth->rows;                                     #wieviele zeilen hat es getroffen
+#print "update_p_out_sent_ok: $num_aff_row Zeilen\n";
   $update_dbhandle->disconnect();
   return $num_aff_row;
 }
@@ -1103,14 +1112,21 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
   my $count = 0;
   my $var1;
   my $OUTFILE_filename = "kdpaket.dat.$timestamp"; # output file name
-print "PFAD: $STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR/$OUTFILE_filename\n";
+  my $pathstr;                                     # path to the file to write
+  my $retval;
+  my $gls_headerline;
+
+  $gls_headerline = "#GPK#|0001|0|SPICERS|1|".get_timestamp('CCYYMMDD')."|50026|";
+#print "PFAD: $STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR/$OUTFILE_filename\n";
 
   if ( $stockno eq '160' ) {                        #pfad für stockno 160
      open ( OUTFILE, '>', "$STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR/$OUTFILE_filename" ) or die "$0 : failed to open  output file $OUTFILE_filename : $!\n";
+     $pathstr = "$STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR/$OUTFILE_filename";
   }
 
   if ( $stockno eq '210' ) {                        #pfad für stockno 160
      open ( OUTFILE, '>', "$STAT_STARTDIR/$GLS_PARCEL2_EXPORTDIR/$OUTFILE_filename" ) or die "$0 : failed to open  output file $OUTFILE_filename : $!\n";
+     $pathstr = "$STAT_STARTDIR/$GLS_PARCEL2_EXPORTDIR/$OUTFILE_filename";
   }
 
   my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
@@ -1120,21 +1136,59 @@ print "PFAD: $STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR/$OUTFILE_filename\n";
         . " g . freight_terms , g . gls_trunc , g . custno , g . name , "
         . " g . street , g . city , g . shipmentno "
         . " FROM gls_parcel_out g "
-#    TODO select in ordnung bringen
-#        . " WHERE g . checkin_date = \'$timestamp\' AND g.stockno = \'$stockno\' AND g.status = \'1\'";
-        . " WHERE g.stockno = \'$stockno\' AND g.status = \'1\'";
+        . " WHERE g . checkin_date = \'$timestamp\' AND g.stockno = \'$stockno\' AND g.status = \'1\'";
+#test        . " WHERE g.stockno = \'$stockno\' AND g.status = \'1\'";
   my $sth = $dbhandle->prepare($sql);
   $sth->execute();
+  print OUTFILE "$gls_headerline\n";              #first line must be GLS headerline
   while (@row=$sth->fetchrow_array()) {
         $count++;
         $var1 = join("|",@row);
-        print OUTFILE "$var1\n";
+        print OUTFILE "$var1|\n";            # | at the end due to gls file rules
   }
   print ".FERTIG $count Zeilen.\n";
-  write_log_entry("writefile_p_out","INFO","Stockno: $stockno FILENAME:$OUTFILE_filename","$count Zeilen");    #statusinfo zu jeder datei
+  write_log_entry("writefile_p_out","INFO","Stockno: $stockno FILENAME:$OUTFILE_filename","$count");    #statusinfo zu jeder datei
   close ( OUTFILE ) or warn "$0 : failed to close output file $OUTFILE_filename : $!\n";
   $dbhandle->disconnect();
-  return 1;
+  $retval = 0;              #return value
+  if (-e $pathstr && -s $pathstr)  {      #existiert die gerade erstellte datei und hat sie mehr als 0 byte?
+       if ( $stockno eq '160' ) {                        #sent file to gls
+          $ftp_return = send_ftp2server ("$pathstr","$GLS_FTPUSER160","$GLS_FTPPASS160","$GLS_FTPHOST160","$GLS_FTPPATH160");
+          if ($ftp_return eq '1') {
+              print "FTP hat geklappt\n";
+              rename ($pathstr,"$pathstr.OK");
+              write_log_entry("writefile_p_out","INFO","FTP OK FILENAME:$OUTFILE_filename","0");    #statusinfo zu jeder datei
+              move2save("$STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$OUTFILE_filename.OK","$stockno");
+              $retval += 1;              #return value plus 1
+          }
+          else {
+              print "FTP FEHLGESCHLAGEN: $ftp_return\n";
+              rename ($pathstr,"$pathstr.ERROR");
+              write_log_entry("writefile_p_out","ERROR","FTP ERROR: $ftp_return FILENAME:$OUTFILE_filename","0");    #statusinfo zu jeder datei
+              move2save("$STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$OUTFILE_filename.ERROR","$stockno");
+          }
+       }
+       if ( $stockno eq '210' ) {                        #sent file to gls
+          $ftp_return = send_ftp2server ("$pathstr","$GLS_FTPUSER210","$GLS_FTPPASS210","$GLS_FTPHOST210","$GLS_FTPPATH210");
+          if ($ftp_return eq '1') {
+              print "FTP hat geklappt\n";
+              rename ($pathstr,"$pathstr.OK");
+              write_log_entry("writefile_p_out","INFO","FTP OK FILENAME:$OUTFILE_filename","0");    #statusinfo zu jeder datei
+              move2save("$STAT_STARTDIR/$GLS_PARCEL2_EXPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$OUTFILE_filename.OK","$stockno");
+              $retval += 2;              #return value plus 2
+          }
+          else {
+              print "FTP FEHLGESCHLAGEN: $ftp_return\n";
+              rename ($pathstr,"$pathstr.ERROR");
+              write_log_entry("writefile_p_out","ERROR","FTP ERROR: $ftp_return FILENAME:$OUTFILE_filename","0");    #statusinfo zu jeder datei
+              move2save("$STAT_STARTDIR/$GLS_PARCEL2_EXPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$OUTFILE_filename.ERROR","$stockno");
+          }
+       }
+  }
+  else {
+    $retval += 0;              #return value plus zero
+  }
+  return $retval;
 }
 
 

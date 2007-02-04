@@ -50,14 +50,14 @@ $GLS_PARCEL2_IMPORTDIR = 'glsparcel210';                              #wo liegen
 $GLS_PARCEL1_EXPORTDIR = 'glsparcel160/out';                          #wo liegen die kdpaket.dat files von stockno 160
 $GLS_PARCEL2_EXPORTDIR = 'glsparcel210/out';                          #wo liegen die kdpaket.dat files von stockno 210
 $GLS_OUT1_TABLENAME = 'gls_parcel_out';
-$GLS_FTPUSER160 = '';                                                 #name des ftp users auf dem gls server
-$GLS_FTPPASS160 = '';                                                 #name des ftp passwd auf dem gls server
-$GLS_FTPHOST160 = '';                                                 #name des ftp servers auf dem gls server
-$GLS_FTPPATH160 = '';                                                 #speicherpfad auf dem gls server
-$GLS_FTPUSER210 = '';                                                 #name des ftp users auf dem gls server
-$GLS_FTPPASS210 = '';                                                 #name des ftp passwd auf dem gls server
-$GLS_FTPHOST210 = '';                                                 #name des ftp servers auf dem gls server
-$GLS_FTPPATH210 = '';                                                 #speicherpfad auf dem gls server
+$GLS_FTPUSER160 = 'test1';                                                 #name des ftp users auf dem gls server
+$GLS_FTPPASS160 = 'test1';                                                 #name des ftp passwd auf dem gls server
+$GLS_FTPHOST160 = 'localhost';                                                 #name des ftp servers auf dem gls server
+$GLS_FTPPATH160 = '/l160';                                                 #speicherpfad auf dem gls server
+$GLS_FTPUSER210 = 'test22';                                                 #name des ftp users auf dem gls server
+$GLS_FTPPASS210 = 'test2';                                                 #name des ftp passwd auf dem gls server
+$GLS_FTPHOST210 = 'localhost';                                                 #name des ftp servers auf dem gls server
+$GLS_FTPPATH210 = '/l210';                                                 #speicherpfad auf dem gls server
 
 ###########################################
 # END of module

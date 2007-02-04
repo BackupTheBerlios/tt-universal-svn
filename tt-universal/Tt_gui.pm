@@ -70,8 +70,6 @@ sub showsearchform () {
          if ($countvar gt 1 ) {                         #mehr als 1? alles gut
               print $form->confirm(header => 0);
               print "<br>\n";
-              #TODO select bauen für jede wertekombination eine funktion bauen
-              #TODO auswahl funktion gemäß der eingegebenen daten
 # print "Countvar: $countvar<br />\n";
               if ($countvar eq 2) {     #shipmentno
                     my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("","","$shipmentno","","02"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
@@ -280,8 +278,8 @@ sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,
           SELECT distinct
      	 `lm1_data`.`custno`,
           `lm1_data`.`shipmentno`,
-     	 `lm1_data`.`rec_date`,
-     	 `lm1_data`.`ack_date`,
+     	 date_format(`lm1_data`.`rec_date`,'%d.%m.%Y') as 'rec_date',
+     	 date_format(`lm1_data`.`ack_date`,'%d.%m.%Y') as 'ack_date',
      	 `lm1_data`.`carrier`,
           `lm1_data`.`carrierboxno`,
      	 `lm1_data`.`lgmboxno`,
@@ -352,12 +350,12 @@ sub query_gls_gepard($){
      print "<br>\n";
 
      my $select3 = "
-     SELECT g.custno, g.shipmentno, g.name1, g.name2, g.name3,
-     g.street, g.city, g.city2, g.zipcode, g.zipcode2,
-     g.countrycode, g.stockno, g.date1, g.date2,
-     g.carrierboxno  FROM gls_gepard1 g
+     SELECT g.custno, g.shipmentno, g.name1, g.name2,
+     g.street, g.city, g.city2, g.zipcode, g.unknown8 as 'lgmboxno',
+     g.stockno, date_format(g.date1,'%d.%m.%Y') as 'date1',
+     date_format(g.date2,'%d.%m.%Y') as 'date2', g.carrierboxno  FROM gls_gepard1 g
      where g.shipmentno in ($liste_shipmentno)";
-
+#print "\n$select3\n";
      my $dbh3 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
      my $sth3 = $dbh3->prepare($select3);
      $sth3->execute();
@@ -388,7 +386,7 @@ sub query_dhl_easylog($){
      print "<br>\n";
 
      my $select4 = "
-     SELECT d.shipmentno, d.name1, d.name2, d.name3,
+     SELECT d.shipmentno, d.name1, d.name2,
      d.street, d.street_number, d.city, d.zipcode, d.countrycode,
      d.stockno, d.lgmboxno, d.carrierboxno FROM dhl_easylog1 d
      where d.lgmboxno in ($liste_lgmboxno)";
@@ -424,7 +422,7 @@ sub query_nightstar($){
 
      my $select5 = "
      SELECT n.custno, n.shipmentno, n.lgmboxno, n.carrierboxno,
-     n.stockno, n.shipdate FROM nightstar1_out n
+     n.stockno, date_format(n.shipdate,'%d.%m.%Y') as 'shipdate' FROM nightstar1_out n
      WHERE n.lgmboxno in ($liste_lgmboxno)";
 
      my $dbh5 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
