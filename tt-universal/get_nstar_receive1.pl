@@ -22,7 +22,7 @@ $| = 1;                     # don't buffer STDOUT (for EPIC use)
 #=============== MAIN =====================
 if ($debug) {print get_timestamp()," ScriptStart!\n"};
 get_nightstar_receive1('160');
-# get_nightstar_receive1('210');
+get_nightstar_receive1('210');
 if ($debug) {print get_timestamp()," ScriptEnde!\n"};
 #=============== END MAIN =================
 

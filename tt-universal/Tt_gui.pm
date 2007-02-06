@@ -24,7 +24,7 @@ sub showsearchform () {
                  label      => 'Kundennummer:',        # shown in front of <input>
                  required   => 0 ,          # must fill field in?
                  validate   => '/^\d{7}$/',      # validate user input
-                 comment    => 'zum Testen: 1603435',
+#                 comment    => 'zum Testen: 1603435',
          );
      $form->field(
                  name       => 'cono',          # name of field (required)
@@ -350,10 +350,10 @@ sub query_gls_gepard($){
      print "<br>\n";
 
      my $select3 = "
-     SELECT g.custno, g.shipmentno, g.name1, g.name2,
-     g.street, g.city, g.city2, g.zipcode, g.unknown8 as 'lgmboxno',
+     SELECT g.shipmentno, g.name1, g.name2,
+     g.street, g.zipcode, g.city, g.unknown8 as 'lgmboxno',
      g.stockno, date_format(g.date1,'%d.%m.%Y') as 'date1',
-     date_format(g.date2,'%d.%m.%Y') as 'date2', g.carrierboxno  FROM gls_gepard1 g
+     g.carrierboxno  FROM gls_gepard1 g
      where g.shipmentno in ($liste_shipmentno)";
 #print "\n$select3\n";
      my $dbh3 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
@@ -387,7 +387,7 @@ sub query_dhl_easylog($){
 
      my $select4 = "
      SELECT d.shipmentno, d.name1, d.name2,
-     d.street, d.street_number, d.city, d.zipcode, d.countrycode,
+     d.street, d.street_number, d.zipcode, d.city, d.countrycode,
      d.stockno, d.lgmboxno, d.carrierboxno FROM dhl_easylog1 d
      where d.lgmboxno in ($liste_lgmboxno)";
 

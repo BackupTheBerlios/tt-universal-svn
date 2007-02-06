@@ -610,6 +610,10 @@ $debug = 1;
 #             push @zeile, substr ($_,8,3);       #stockno
              @zeile = split (/;/);   # am semikolon auftrennen
              $countcolumn = $#zeile;  # anzahl der arrayelemente aufheben
+#print "count: $countcolumn\n";
+             if ($countcolumn eq 8 ) {            #eine spalte zu wenig? dann leere stockno hinzufügen
+	             push(@zeile,'');
+             }
 
 if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufheben
              for (my $i=0;$i<=$#zeile;$i++) {
@@ -630,7 +634,7 @@ if ($debug) {$temp = $#zeile}; #   zu debugzwecken anzahl der arrayelemente aufh
 #              (`carrierrefno`,`carrierboxno`,`custno`,`name1`,`name2`,`street`,`zipcode`,`city`,`deliver_until`,`shipdate`,`parcelcount1`,`parcelcount2`,`weight`,`shipmentno`,`sender1`,`sender2`,`sender3`,`content`,`atg`,`ast`,`shipment`,`dispatch`,`labeltext`,`freight_terms`,`end_customer1`,`end_customer2`,`end_customer3`,`end_customer4`,`end_customer5`,`stockno`)
 #              VALUES
 #              ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11],$zeile[12],$zeile[13],$zeile[14],$zeile[15],$zeile[16],$zeile[17],$zeile[18],$zeile[19],$zeile[20],$zeile[21],$zeile[22],$zeile[23],$zeile[24],$zeile[25],$zeile[26],$zeile[27],$zeile[28],$zeile[29])";
-              $dbhandle->do($sql);
+               $dbhandle->do($sql);
 #               print "SQL: ",$sql,"\n";
               $countvar++;
         }  # --- end while
@@ -1165,7 +1169,7 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
               print "FTP FEHLGESCHLAGEN: $ftp_return\n";
               rename ($pathstr,"$pathstr.ERROR");
               write_log_entry("writefile_p_out","ERROR","FTP ERROR: $ftp_return FILENAME:$OUTFILE_filename","0");    #statusinfo zu jeder datei
-              move2save("$STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$OUTFILE_filename.ERROR","$stockno");
+              move2save("$STAT_STARTD/$GLS_PARCEL1_EXPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$OUTFILE_filename.ERROR","$stockno");
           }
        }
        if ( $stockno eq '210' ) {                        #sent file to gls
@@ -1191,6 +1195,135 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
   return $retval;
 }
 
+###########################################
+# write gls_parcel_out data to csv file for sending to gls
+sub calc_carrierboxno($$$) {        #param: carrierboxno, carrier, stockno
+###########################################
+#        my ( $spcpaketnummer, $carrier, $lagernummer ) = @_;
+        my $spcpaketnummer = $_[0];
+        my $carrier = $_[1];
+        my $lagernummer = $_[2];
+        my $carpaketnummer;
+        my $summe;
+        my $checkdigit;
+
+        #ermitteln des Checkdigit
+        if ( $carrier eq "DP" ) {    #Carrier Deutsche Post
+                                     #ermitteln des Lagercodes
+         if ( $lagernummer eq "160" ) {    #Lager Höver
+          $lagercode = 30617;
+         }
+         elsif ( $lagernummer eq "210" )    #Lager Winkelhaid
+         {
+          $lagercode = 90655;
+         }
+
+         #ergänzen der Paketnummer um den Lagercode
+         $paketnummer = $lagercode . $spcpaketnummer;
+
+         #Anhand der Länge die Gültigkeit der Paketnummer prüfen
+         if ( length($spcpaketnummer) == 6 )    #Paketnummer gültig
+         {
+
+          #Checksumme errechnen (1.,3. usw Stelle der Paketnummer mit 4,
+          #                      2.,4. usw Stelle der Paketnummer mit 9
+          #                      multiplizieren und die Ergebnisse addieren)
+          for ( $i = 0 ; $i <= length($paketnummer) - 1 ; $i++ ) {
+           $wert = substr( $paketnummer, $i, 1 );
+           $summe = $summe + ( $wert * 4 );
+           $i = $i + 1;
+           if ( $i <= length($paketnummer) - 1 ) {
+            $wert = substr( $paketnummer, $i, 1 );
+            $summe = $summe + ( $wert * 9 );
+           }
+          }
+
+     #errechnete Summe durch 10 teilen und den Divisionsrest von 10 subtrahieren
+     #==> Checkdigit außer wenn der Rest 0 ist, dann ist das Checkdigit auch 0
+          $rest = $summe % 10;
+          if ( $rest != 0 ) {
+           $checkdigit = 10 - $rest;
+          }
+          else {
+           $checkdigit = 0;
+          }
+         }
+         else    #Paketnummer ungültig
+         {
+          if ( length($spcpaketnummer) < 6 )    #Paketnummer zu kurz
+          {
+           $checkdigit = 55;
+          }
+          else                                  #Paketnummer zu lang
+          {
+           $checkdigit = 77;
+          }
+         }
+        }
+        elsif ( $carrier eq "GP" )              #Carrier German Parcel
+        {
+
+         #ermitteln des Lagercodes
+         if ( $lagernummer eq "160" )           #Lager Höver
+         {
+          $lagercode = 30;
+         }
+         elsif ( $lagernummer eq "210" )        #Lager Winkelhaid
+         {
+          $lagercode = 85;
+         }
+
+         #ergänzen der Paketnummer um den Lagercode
+         $paketnummer = $lagercode . $spcpaketnummer;
+
+         #Anhand der Länge die Gültigkeit der Paketnummer prüfen
+         if ( length($spcpaketnummer) == 9 )    #Paketnummer gültig
+         {
+
+          #Checksumme errechnen (1.,3. usw Stelle der Paketnummer mit 4,
+          #                      2.,4. usw Stelle der Paketnummer mit 9
+          #                      multiplizieren und die Ergebnisse addieren)
+          for ( $i = 0 ; $i <= length($paketnummer) - 1 ; $i++ ) {
+           $wert = substr( $paketnummer, $i, 1 );
+           $summe = $summe + ( $wert * 3 );
+           $i = $i + 1;
+           if ( $i <= length($paketnummer) - 1 ) {
+            $wert = substr( $paketnummer, $i, 1 );
+            $summe = $summe + ( $wert * 1 );
+           }
+          }
+
+          #Summe nochmal um 1 erhöhen
+          $summe = $summe + 1;
+
+     #errechnete Summe durch 10 teilen und den Divisionsrest von 10 subtrahieren
+     #==> Checkdigit außer wenn der Rest 0 ist, dann ist das Checkdigit auch 0
+          $rest = $summe % 10;
+          if ( $rest != 0 ) {
+           $checkdigit = 10 - $rest;
+          }
+          else {
+           $checkdigit = 0;
+          }
+         }
+         else    #Paketnummer ungültig
+         {
+          if ( length($spcpaketnummer) < 9 )    #Paketnummer zu kurz
+          {
+           $checkdigit = 55;
+          }
+          else                                  #Paketnummer zu lang
+          {
+           $checkdigit = 77;
+          }
+         }
+        }
+        else {
+         $paketnummer = $spcpaketnummer;
+        }
+        $carpaketnummer = $paketnummer . $checkdigit;
+        return ($carpaketnummer);
+}
 
 ###########################################
 # END of module
