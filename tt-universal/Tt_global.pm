@@ -209,7 +209,7 @@ sub move2save($$$;$) {             #param: woher, wohin, dateiname, (opt) wareho
      }
 
 #print "Von: $from_dir \nNach: $to_dir/$year2/$mon2 \nFilename im SUB: $file \nMonat: $mon2 Jahr: $year2 Lager: $warehouse\n";
-     move("$from_dir/$file","$to_dir/$year2/$mon2/$file\.$timestamp\.$warehouse\.done") or die "move not possible! $!\n";
+     move("$from_dir/$file","$to_dir/$year2/$mon2/$file\.$timestamp\.$warehouse\.done") or die "file $file: move not possible! $!\n";
 }
 
 ###########################################
@@ -1157,7 +1157,9 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
   $retval = 0;              #return value
   if (-e $pathstr && -s $pathstr)  {      #existiert die gerade erstellte datei und hat sie mehr als 0 byte?
        if ( $stockno eq '160' ) {                        #sent file to gls
-          $ftp_return = send_ftp2server ("$pathstr","$GLS_FTPUSER160","$GLS_FTPPASS160","$GLS_FTPHOST160","$GLS_FTPPATH160");
+#          $ftp_return = send_ftp2server ("$pathstr","$GLS_FTPUSER160","$GLS_FTPPASS160","$GLS_FTPHOST160","$GLS_FTPPATH160");
+# TODO FTP Transfer für GLS einschalten
+           $ftp_return = 1;
           if ($ftp_return eq '1') {
               print "FTP hat geklappt\n";
               rename ($pathstr,"$pathstr.OK");
@@ -1169,11 +1171,12 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
               print "FTP FEHLGESCHLAGEN: $ftp_return\n";
               rename ($pathstr,"$pathstr.ERROR");
               write_log_entry("writefile_p_out","ERROR","FTP ERROR: $ftp_return FILENAME:$OUTFILE_filename","0");    #statusinfo zu jeder datei
-              move2save("$STAT_STARTD/$GLS_PARCEL1_EXPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$OUTFILE_filename.ERROR","$stockno");
+              move2save("$STAT_STARTDIR/$GLS_PARCEL1_EXPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$OUTFILE_filename.ERROR","$stockno");
           }
        }
        if ( $stockno eq '210' ) {                        #sent file to gls
-          $ftp_return = send_ftp2server ("$pathstr","$GLS_FTPUSER210","$GLS_FTPPASS210","$GLS_FTPHOST210","$GLS_FTPPATH210");
+#          $ftp_return = send_ftp2server ("$pathstr","$GLS_FTPUSER210","$GLS_FTPPASS210","$GLS_FTPHOST210","$GLS_FTPPATH210");
+           $ftp_return = 1;
           if ($ftp_return eq '1') {
               print "FTP hat geklappt\n";
               rename ($pathstr,"$pathstr.OK");
