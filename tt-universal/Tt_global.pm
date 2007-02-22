@@ -1200,7 +1200,7 @@ sub writefile_p_out($$) {        #param: checkin_date, stockno (timestamp; TEST:
 
 ###########################################
 # write gls_parcel_out data to csv file for sending to gls
-sub calc_carrierboxno($$$) {        #param: carrierboxno, carrier, stockno
+sub calc_carrierboxno($$$) {        #param: carrierboxno, carrier (DP,GP), stockno (160,210)
 ###########################################
 #        my ( $spcpaketnummer, $carrier, $lagernummer ) = @_;
         my $spcpaketnummer = $_[0];
