@@ -139,6 +139,7 @@ CREATE TABLE `lm1_data` (
   `carrier` varchar(10) default NULL,
   `lgmboxno` int(10) unsigned default NULL,
   `carrierboxno` int(10) unsigned default NULL,
+  `ext_carrierboxno` varchar( 20 ) NOT NULL default '';
   PRIMARY KEY  (`stockno`,`custno`,`picklistno`,`shipmentno`,`picklistrowpos`),
   KEY `lmboxno` (`lmboxno`),
   KEY `picklistno` (`picklistno`),
