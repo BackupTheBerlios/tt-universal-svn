@@ -283,7 +283,8 @@ sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,
      	 `lm1_data`.`carrier`,
           `lm1_data`.`carrierboxno`,
      	 `lm1_data`.`lgmboxno`,
-     	 `lm1_data`.`stockno`
+     	 `lm1_data`.`stockno`,
+     	 `lm1_data`.`ext_carrierboxno` as 'Paketnummer'
           FROM
           `focus_data` `focus_data`
           INNER JOIN `lm1_data` `lm1_data`

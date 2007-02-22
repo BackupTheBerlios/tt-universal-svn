@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 use strict;
 use warnings;
 
@@ -16,7 +18,7 @@ $| = 1;                     # don't buffer STDOUT (for EPIC use)
 # Datenbank-Verbindung aufbauen
 my $dbh = DBI->connect( 'dbi:mysql:trackandtrace', 'root', '') || die "Kann keine Verbindung zum MySQL-Server aufbauen: $DBI::errstr\n";
 
-$sql_string = "select * from lm1_data where lgmboxno != carrierboxno and (carrier = \'GP\' or carrier = \'DP\')";
+$sql_string = "select * from lm1_data where lgmboxno != carrierboxno and carrierboxno > 0 and (carrier = \'GP\' or carrier = \'DP\')";
 # print $sql_string;
 $sth = $dbh->prepare($sql_string) || die "Kann Statement nicht vorbereiten: $DBI::errstr\n";
 $sth->execute() || die "Kann Abfrage nicht ausfuehren:  $DBI::errstr\n";
@@ -27,7 +29,7 @@ while (my $ergebnis = $sth->fetchrow_hashref()) {
      $count ++;
      my $stock =  $ergebnis->{'stockno'} ;
      my $carrier =  $ergebnis->{'carrier'} ;
-     my $boxno =  $ergebnis->{'lgmboxno'} ;
+     my $boxno =  $ergebnis->{'carrierboxno'} ;
      my $cust = $ergebnis->{'custno'} ;
      my $picklist = $ergebnis->{'picklistno'} ;
      my $shipment = $ergebnis->{'shipmentno'} ;
@@ -37,8 +39,8 @@ while (my $ergebnis = $sth->fetchrow_hashref()) {
 #     print "box: $boxno | carrier: $carrier | stock: $stock | ext_box: $ext_boxno\n";
 
      my $update1 = "UPDATE `lm1_data` SET `ext_carrierboxno` = '$ext_boxno' WHERE `stockno` = $stock AND `custno` = $cust AND `picklistno` = $picklist AND `shipmentno` = $shipment AND `picklistrowpos` = $plrp";
-     exit if $count == 2000;
-     print "$update1 \n";
+#     exit if $count == 2000;
+#     print "$update1 \n";
 my $sth2 = $dbh->prepare($update1) || die "Kann Statement nicht vorbereiten: $DBI::errstr\n";
 $sth2->execute() || die "Kann Abfrage nicht ausfuehren:  $DBI::errstr\n";
 print "~";
@@ -61,7 +63,7 @@ sub calc_carrierboxno($$$) {        #param: carrierboxno, carrier (DP,GP), stock
         my $carrier = $_[1];
         my $lagernummer = $_[2];
         my $carpaketnummer;
-        my $summe;
+        my $summe = 0;
         my $checkdigit;
         my $lagercode;
         my $paketnummer;
