@@ -148,6 +148,7 @@ sub get_lm1 {
              if ($#zeile == 8){       #nur 9 spalten? dann fehlt eine
                   push @zeile,'';     # eine leere spalte hinzufuegen
              };
+#TODO Einfuegen calc ext_carrierboxno
              for(my $i=0;$i<=$#zeile;$i++) {
                   $zeile[$i] = trim($zeile[$i]);
                   if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
@@ -1209,6 +1210,12 @@ sub calc_carrierboxno($$$) {        #param: carrierboxno, carrier (DP,GP), stock
         my $carpaketnummer;
         my $summe;
         my $checkdigit;
+        my $lagercode;
+        my $paketnummer;
+        my $i;
+        my $rest;
+        my $wert;
+
 
         #ermitteln des Checkdigit
         if ( $carrier eq "DP" ) {    #Carrier Deutsche Post
