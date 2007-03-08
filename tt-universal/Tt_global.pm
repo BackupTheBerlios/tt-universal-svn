@@ -117,6 +117,7 @@ sub get_lm1 {
      if ($debug) {print "Debug Start lm1\n"};
 
      my $countvar = 0;
+     my $external_boxno = '';
 
      #get filelist
      opendir (DIR,"$STAT_STARTDIR/$LM1_IMPORTDIR") || die "Opendir $STAT_STARTDIR/$LM1_IMPORTDIR not possible: $!";
@@ -148,7 +149,15 @@ sub get_lm1 {
              if ($#zeile == 8){       #nur 9 spalten? dann fehlt eine
                   push @zeile,'';     # eine leere spalte hinzufuegen
              };
-#TODO Einfuegen calc ext_carrierboxno
+
+             for(my $i=0;$i<=$#zeile;$i++) {        #trimmen vor der ermittlung der ext_paketnummer
+                  $zeile[$i] = trim($zeile[$i]);
+             }
+             $external_boxno = '';  #variable wieder leeren
+             if (($zeile[7] eq 'GP' || $zeile[7] eq 'DP' ) && ($zeile[8] ne $zeile[9]) ) { #carrier GP oder DP und lgmboxno ungleich carrierboxno? dann externe paketnummer berechnen
+                 $external_boxno = calc_carrierboxno($zeile[9], $zeile[7], $zeile[0]); # 1=carrierboxno 2=carrier 3=stockno
+             }
+             push @zeile, $external_boxno;   # auf jeden fall zeile mit externalboxno anfuegen
              for(my $i=0;$i<=$#zeile;$i++) {
                   $zeile[$i] = trim($zeile[$i]);
                   if ($zeile[$i] eq "") {    # Leerer Wert? Dann DEFAULT Befehl übergeben.
@@ -158,8 +167,8 @@ sub get_lm1 {
                     $zeile[$i] = "\'".$zeile[$i]."\'";
                   }
              }
-             my $sql = "INSERT IGNORE INTO `$LM1_TABLENAME` ( `stockno` , `custno` , `picklistno` , `shipmentno` , `picklistrowpos` , `rec_date` , `ack_date` , `carrier` , `lgmboxno` , `carrierboxno` )
-VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9])";
+             my $sql = "INSERT IGNORE INTO `$LM1_TABLENAME` ( `stockno` , `custno` , `picklistno` , `shipmentno` , `picklistrowpos` , `rec_date` , `ack_date` , `carrier` , `lgmboxno` , `carrierboxno` , `ext_carrierboxno` )
+VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10])";
              $dbhandle->do($sql) or warn "do sql error:\n$sql\nDBI Error: $DBI::errstr";
              $countvar++;
              }
