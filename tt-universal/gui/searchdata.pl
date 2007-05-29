@@ -4,6 +4,7 @@ my $debug = 1;              # set to 1 for debug print (for each .pl .pm separat
 use strict;
 use warnings;
 use lib ('/spicers/scripts/perl');
+use lib ('/Users/rk/workspace/tt-universal');
 use lib ('D:/programme/EasyEclipse-LAMP102/workspace/tt-universal');
 use lib ('C:/Programme/EasyEclipse-LAMP102/workspace/tt-universal');
 use DBI;
