@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-my $debug = 1;              # set to 1 for debug print (for each .pl .pm separately)
+my $debug = 1;              # set to 1 for debug print (for each .pl .pm separately )
 
 use strict;
 use warnings;
