@@ -379,9 +379,10 @@ $debug = 1;
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
         if ( $warehouse eq '160' ) {                        #pfad für stockno 160
-             move2save("$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
+#             move2save("$STAT_STARTDIR/$DHL_EASY1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
         } elsif ( $warehouse eq '210' ) {                        #pfad für stockno 210
-             move2save("$STAT_STARTDIR/$DHL_EASY2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
+#             move2save("$STAT_STARTDIR/$DHL_EASY2_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file","$warehouse");
+# TODO move2save bei get_dhl1 wieder einschalten
         }
         write_log_entry("get_dhl1","INFO","FILENAME:$file VERFAHREN:$filetreatment LFD-NUMMER:$filecount","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
