@@ -29,11 +29,15 @@ my $level = $q->param('level') || 'start';
 print $q->header();
 print $q->start_html("trackandtrace Suchseite");
 print $q->h1( "trackandtrace Suchseite" );
+print $q->a({-href=>'http://stat.spicers.de/wiki/index.php/SpicersWiki:Portal',-target=>'_new'},"Hilfe zu diesem Formular ( &ouml;ffnet in neuem Fenster)");
+#TODO URL zur Hilfeseite anpassen
+print "<br><br>\n";
 
 # Runmodes
 if ($level eq 'start') {
     # Suchformular ausgeben
-    showsearchform ();
+    showsearchform2 ();
+#TODO showsearchform2 aufruf anpassen
 }
 elsif ($level eq 'scl') {                         #scd show cono level 1
     show_cono_level1( $q->param('custno'), $q->param('partno') );
