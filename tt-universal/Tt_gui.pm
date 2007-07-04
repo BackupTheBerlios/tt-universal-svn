@@ -189,6 +189,104 @@ sub showsearchform () {
 }
 
 ###########################################
+#show empty searchform and sub from here depending on query_variant
+sub showsearchform2 () {
+##########################################
+     my $countvar;
+     my $filled_field_value = 0;
+
+     @fields = qw(custno cono shipmentno partno);
+     $form = CGI::FormBuilder->new(
+                  fields => \@fields,
+                  messages => ':de_DE',
+                  method => 'post',
+                  reset => 'Suchfelder leeren',
+                  keepextras => 1,
+                  javascript => 0
+             );
+     $form->field(
+                 name       => 'custno',          # name of field (required)
+                 label      => 'Kundennummer:',        # shown in front of <input>
+                 required   => 0 ,          # must fill field in?
+                 validate   => '/^\d{7}$/',      # validate user input
+#                 comment    => 'zum Testen: 1603435',
+         );
+     $form->field(
+                 name       => 'cono',          # name of field (required)
+                 label      => 'Auftragsnummer:',        # shown in front of <input>
+                 required   => 0 ,          # must fill field in?
+                 validate   => '/^\d{6}$/',      # validate user input
+         );
+     $form->field(
+                 name       => 'shipmentno',          # name of field (required)
+                 label      => 'Lieferscheinnummer:',        # shown in front of <input>
+                 required   => 0 ,          # must fill field in?
+                 validate   => '/^\d{6}$/',      # validate user input
+         );
+     $form->field(
+                 name       => 'partno',          # name of field (required)
+                 label      => 'Artikelnummer:',        # shown in front of <input>
+                 required   => 0 ,          # must fill field in?
+                 validate   => '/^\d{5}(\d|x|X)$/',      # validate user input
+                 comment    => 'Nach einer Artikelnummer kann nur ZUS&Auml;TZLICH gesucht werden.<br />',        # printed after field
+         );
+     if ($form->submitted && $form->validate) {
+         # you would write code here to act on the form data
+         $countvar = 0;                                #zŠhvar zurücksetzen, binär benutzt
+                                                       #summe von countvar zeigt, welche felder gesetzt sind
+                                                       #custno=50,partno=100, sonst einfach hochzŠhlen
+         my $custno = $form->field('custno');
+         if (length($custno) > 1) {
+               $countvar +=50;							#sonderfall nur custno beruecksichtigen
+         }
+         my $cono = $form->field('cono');              #dito
+         if (length($cono) > 1) {
+               $countvar ++;
+         }
+         my $shipmentno = $form->field('shipmentno');  #dito
+         if (length($shipmentno) > 1) {
+               $countvar ++;
+         }
+         my $partno = $form->field('partno');          #wenn in partno was steht
+         if (length($partno) > 1) {
+               $countvar +=100;							#sonderfall nur partno beruecksichtigen
+              $partno =~ tr/x/X/;                      #nur grosses X
+         }
+print "<br>countvar = $countvar <br>\n";
+
+         if ($countvar eq 100) {                       #nur valid wenn alles ausser partno leer ist
+              $form->field(name => 'partno', invalid => 1);
+              print $form->render(header => 0, sticky => 1);
+         }
+         elsif ($countvar eq 50 || $countvar eq 150) {  #custno or custno plus partno
+              show_cono_level1($custno,$partno);
+         }
+         elsif ($countvar eq 0) {                       #alles leer? nochmal
+              print "Keine Daten erhalten! Nochmal.<br />\n";
+              $form->field(name => 'partno', invalid => 0);
+              print $form->render(header => 0, sticky => 1);
+         }
+         elsif ($countvar ge 1 ) {                         #1 oder mehr als 1? alles gut
+              print $form->confirm(header => 0);
+              print "<br>\n";
+              my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("$custno","$cono","$shipmentno","$partno","$countvar"); #reihenfolge: custno,cono,shipmentno,partno,anzahl
+              if ($liste_shipmentno && $liste_lgmboxno) {
+					query_gls_gepard ($liste_shipmentno);
+                    query_dhl_easylog ($liste_lgmboxno);
+                    query_nightstar ($liste_lgmboxno);
+              }
+         }
+         else {                                        #countvar nicht definiert? nochmal
+              print "<br />ERROR<br />";
+         }
+	  }
+     else {												# form noch nicht submittet oder nicht validiert
+         print $form->render(header => 0);
+     }
+}
+
+###########################################
+
 # funktion für auswahl cono nach übergabe custno und ggf. partno
 sub show_cono_level1($;$) {
 ###########################################
@@ -198,7 +296,7 @@ sub show_cono_level1($;$) {
      my $var1;
 
      #jetzt select bauen mit oder ohne partno
-     my $select1 = "SELECT distinct cono, date_format(priodate,'%d.%m.%Y') as 'date' FROM focus_data
+     my $select1 = "SELECT distinct cono, date_format(priodate,'%d.%m.%Y') as 'date' FROM $FOC_TABLENAME
      where custno = '$custno_var'";
      if ($partno_var) {
           $select1 .= " and partno = '$partno_var'";
@@ -253,7 +351,7 @@ sub show_cono_detail ($) {
 
 ###########################################
 #hauptabfrage lm
-sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (02-15)
+sub query_lm_main_alt ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (02-15)
 ###########################################
      my $var_custno = $_[0];
      my $var_cono = $_[1];
@@ -340,6 +438,125 @@ sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,
 # print "<br>liste shipment: $liste_shipmentno <br> liste boxno: $liste_lgmboxno<br><br>\n";
      return ($liste_shipmentno, $liste_lgmboxno);      #es werden ZWEI werte zurückgegeben
 }
+
+###########################################
+#hauptabfrage lm
+sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (02-15)
+###########################################
+     my $var_custno = $_[0];
+     my $var_cono = $_[1];
+     my $var_shipmentno = $_[2];
+     my $var_partno = $_[3];
+     my $query_variant = $_[4];
+     my @names2;              #array für spaltennamen
+     my $name;                #string für temp-var
+     my $liste_shipmentno;    #var für rückgabeliste1
+     my $liste_lgmboxno;      #var für rückgabeliste2
+     my $countvar = 0;
+
+     print "<br>Ergebnisse aus LM:<br>\n";
+
+     #hier beginnt der query-string
+     my $select2 = "
+          SELECT distinct
+     	 `$LM1_TABLENAME`.`custno`,
+         `$LM1_TABLENAME`.`shipmentno`,
+     	 date_format(`$LM1_TABLENAME`.`rec_date`,'%d.%m.%Y') as 'rec_date',
+     	 date_format(`$LM1_TABLENAME`.`ack_date`,'%d.%m.%Y') as 'ack_date',
+     	 `$LM1_TABLENAME`.`carrier`,
+         `$LM1_TABLENAME`.`carrierboxno`,
+     	 `$LM1_TABLENAME`.`lgmboxno`,
+     	 `$LM1_TABLENAME`.`stockno`,
+     	 `$LM1_TABLENAME`.`ext_carrierboxno` as 'Paketnummer'
+         FROM
+         `$FOC_TABLENAME` `focus_data`
+         INNER JOIN `$LM1_TABLENAME` `lm1_data`
+         ON `$FOC_TABLENAME`.`picklistno` = `$LM1_TABLENAME`.`picklistno`
+         AND `$FOC_TABLENAME`.`shipmentrowpos` = `$LM1_TABLENAME`.`picklistrowpos`
+         WHERE ";    #die letzte zeile evtl nur bei partno gesetzt
+
+     if ($var_custno) {
+     	$select2 .= "`$FOC_TABLENAME`.`custno` IN ($var_custno) ";
+     	$countvar ++;
+     	}
+
+     if ($var_cono) {
+     	if ($countvar ge 1) {
+     		$select2 .= "AND ";
+     	}
+     	$select2 .= "`$FOC_TABLENAME`.`cono` in ($var_cono) ";
+     	$countvar ++;
+     }
+
+     if ($var_shipmentno) {
+     	if ($countvar ge 1) {
+     		$select2 .= "AND ";
+     	}
+     	$select2 .= "`$FOC_TABLENAME`.`shipmentno` in ($var_shipmentno) ";
+     	$countvar ++;
+     }
+
+     if ($var_partno) {
+     	if ($countvar ge 1) {
+     		$select2 .= "AND ";
+     	}
+     	$select2 .= "`$FOC_TABLENAME`.`partno` IN ($var_partno) ";
+     	$countvar ++;
+     }
+
+     if ($query_variant) {print"<br>var query variant def: $query_variant <br>"};
+
+
+#     for ($query_variant) {   #die abfragevariante entscheidet, wie der querystring weitergeht
+#         if (/02/)      { $select2 .= " WHERE `$FOC_TABLENAME`.`shipmentno` in ($var_shipmentno)";}     # do something else
+#         elsif (/03/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`shipmentno` in ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
+#         elsif (/04/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` in ($var_cono)";}     # do something else
+#         elsif (/05/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` in ($var_cono) AND `$FOC_TABLENAME`.`partno` IN ($var_partno)"; }     # do something else
+#         elsif (/06/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`shipmentno` IN ($var_shipmentno)"; }     # do something else
+#         elsif (/07/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`shipmentno` IN ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
+#         elsif (/08/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` in ($var_cono)"; }     # do something else
+#         elsif (/09/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` in ($var_cono) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
+#         elsif (/10/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno)";}     # do something else
+#         elsif (/11/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
+#         elsif (/12/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno)";}     # do something else
+#         elsif (/13/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
+#         elsif (/14/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno)";}     # do something else
+#        else           { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)";}     # default
+#     }
+
+     $select2 .= "ORDER by `$LM1_TABLENAME`.`ack_date`";         #die sortierreihenfolge
+print "<br>Select2: $select2<br><br>\n";
+     my $dbh2 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
+     my $sth2 = $dbh2->prepare($select2);
+     $sth2->execute();
+     $dbh2->disconnect();
+
+     if ($sth2->rows gt 0 ) {                 #wenn was gefunden wurde
+          @names2 = @{$sth2->{NAME}};
+          print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names2)."\n";
+          while(my $row = $sth2->fetchrow_hashref()){
+               $count++;
+               $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names2})."</tr>\n";
+               print $var1;
+               for $name(@names2){
+                    push @{$hash{$name}},$row->{$name};
+               }
+          }
+          print "</table><br>\n";
+          $liste_shipmentno = join(',',@{$hash{'shipmentno'}});    #strings erzeugen für die rückgabe
+          $liste_lgmboxno = join(',',@{$hash{'lgmboxno'}});
+
+     }
+     else {
+          print "<b>Keine Daten gefunden!</b><br>\n";
+          $liste_shipmentno = "";    #leere strings erzeugen für die rückgabe
+          $liste_lgmboxno = "";
+
+     }
+# print "<br>liste shipment: $liste_shipmentno <br> liste boxno: $liste_lgmboxno<br><br>\n";
+     return ($liste_shipmentno, $liste_lgmboxno);      #es werden ZWEI werte zurückgegeben
+}
+
 
 ###########################################
 #abfrage 1 gepard
