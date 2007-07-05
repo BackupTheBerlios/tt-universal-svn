@@ -195,7 +195,7 @@ sub showsearchform2 () {
      my $countvar;
      my $filled_field_value = 0;
 
-     @fields = qw(custno cono shipmentno partno);
+     @fields = qw(custno cono shipmentno lgmboxno partno);
      $form = CGI::FormBuilder->new(
                   fields => \@fields,
                   messages => ':de_DE',
@@ -215,13 +215,19 @@ sub showsearchform2 () {
                  name       => 'cono',          # name of field (required)
                  label      => 'Auftragsnummer:',        # shown in front of <input>
                  required   => 0 ,          # must fill field in?
-                 validate   => '/^\d{6}$/',      # validate user input
+                 validate   => '/^\d{4,6}$/',      # validate user input
          );
      $form->field(
                  name       => 'shipmentno',          # name of field (required)
                  label      => 'Lieferscheinnummer:',        # shown in front of <input>
                  required   => 0 ,          # must fill field in?
                  validate   => '/^\d{6}$/',      # validate user input
+         );
+	 $form->field(
+                 name       => 'lgmboxno',          # name of field (required)
+                 label      => 'LM-Paketnummer:',        # shown in front of <input>
+                 required   => 0 ,          # must fill field in?
+                 validate   => '/^\d{6,8}$/',      # validate user input
          );
      $form->field(
                  name       => 'partno',          # name of field (required)
@@ -247,12 +253,16 @@ sub showsearchform2 () {
          if (length($shipmentno) > 1) {
                $countvar ++;
          }
+         my $lgmboxno = $form->field('lgmboxno');  #dito
+         if (length($lgmboxno) > 1) {
+               $countvar ++;
+         }
          my $partno = $form->field('partno');          #wenn in partno was steht
          if (length($partno) > 1) {
                $countvar +=100;							#sonderfall nur partno beruecksichtigen
               $partno =~ tr/x/X/;                      #nur grosses X
          }
-print "<br>countvar = $countvar <br>\n";
+# print "<br>countvar = $countvar <br>\n";
 
          if ($countvar eq 100) {                       #nur valid wenn alles ausser partno leer ist
               $form->field(name => 'partno', invalid => 1);
@@ -269,7 +279,7 @@ print "<br>countvar = $countvar <br>\n";
          elsif ($countvar ge 1 ) {                         #1 oder mehr als 1? alles gut
               print $form->confirm(header => 0);
               print "<br>\n";
-              my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("$custno","$cono","$shipmentno","$partno","$countvar"); #reihenfolge: custno,cono,shipmentno,partno,anzahl
+              my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main("$custno","$cono","$shipmentno","$partno","$lgmboxno","$countvar"); #reihenfolge: custno,cono,shipmentno,partno,lgmboxno,anzahl
               if ($liste_shipmentno && $liste_lgmboxno) {
 					query_gls_gepard ($liste_shipmentno);
                     query_dhl_easylog ($liste_lgmboxno);
@@ -309,22 +319,15 @@ sub show_cono_level1($;$) {
      $sth->execute();         #select ausführen
      $dbh->disconnect();      #database handle schliessen
 
-#while ( my @ergebnis = $sth->fetchrow_array() ){
-#  # Im Array @ergebnis steht nun ein Datensatz
-#  print $ergebnis[0] . " " . $ergebnis[1] . "<br>\n";
-#}
-
-
      if ($sth->rows gt 0 ) {                 #wenn was gefunden wurde
           my @names = @{$sth->{NAME}};
-#          print "<h1>Test Überschrift custno: $custno_var partno: $partno_var</h1>";
           print "<h1>custno: $custno_var partno: $partno_var</h1>";
 
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names)."\n";
           while(my $row = $sth->fetchrow_hashref()){
                $count++;
                $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names})."</tr>\n";
-               $var1 =~ s!(.*)(<td>)(\d{6})(<\/td>)(.*)!$1$2<a href="$SERVER_MAIN_FILENAME?level=scd;cono=$3" target="_blank">$3</a>$4$5!;  #relative URL!
+               $var1 =~ s!(.*)(<td>)(\d{4,6})(<\/td>)(.*)!$1$2<a href="$SERVER_MAIN_FILENAME?level=scd;cono=$3" target="_blank">$3</a>$4$5!;  #relative URL!
                print $var1;
           }
           print "</table><br>\n";
@@ -341,7 +344,7 @@ sub show_cono_detail ($) {
 ###########################################
 
      my $cono_var = $_[0];
-     my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main ("",$cono_var,"","","08"); #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (2-15)
+     my ($liste_shipmentno, $liste_lgmboxno) = query_lm_main ("",$cono_var,"","","","08"); #reihenfolge: custno,cono,shipmentno,partno,lgmboxno abfragevariante (2-15)
      if ($liste_shipmentno && $liste_lgmboxno) {
           query_gls_gepard ($liste_shipmentno);
           query_dhl_easylog ($liste_lgmboxno);
@@ -441,13 +444,14 @@ sub query_lm_main_alt ($$$$$){          #reihenfolge: custno,cono,shipmentno,par
 
 ###########################################
 #hauptabfrage lm
-sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,abfragevariante (02-15)
+sub query_lm_main ($$$$$$){          #reihenfolge: custno,cono,shipmentno,partno,lgmboxno,abfragevariante
 ###########################################
      my $var_custno = $_[0];
      my $var_cono = $_[1];
      my $var_shipmentno = $_[2];
      my $var_partno = $_[3];
-     my $query_variant = $_[4];
+     my $var_lgmboxno = $_[4];
+     my $query_variant = $_[5];
      my @names2;              #array für spaltennamen
      my $name;                #string für temp-var
      my $liste_shipmentno;    #var für rückgabeliste1
@@ -495,37 +499,25 @@ sub query_lm_main ($$$$$){          #reihenfolge: custno,cono,shipmentno,partno,
      	$select2 .= "`$FOC_TABLENAME`.`shipmentno` in ($var_shipmentno) ";
      	$countvar ++;
      }
-
+     if ($var_lgmboxno) {
+     	if ($countvar ge 1) {
+     		$select2 .= "AND ";
+     	}
+     	$select2 .= "`$LM1_TABLENAME`.`lgmboxno` in ($var_lgmboxno) ";
+     	$countvar ++;
+     }
      if ($var_partno) {
      	if ($countvar ge 1) {
      		$select2 .= "AND ";
      	}
-     	$select2 .= "`$FOC_TABLENAME`.`partno` IN ($var_partno) ";
+     	$select2 .= "`$FOC_TABLENAME`.`partno` IN ('$var_partno') ";
      	$countvar ++;
      }
 
-     if ($query_variant) {print"<br>var query variant def: $query_variant <br>"};
-
-
-#     for ($query_variant) {   #die abfragevariante entscheidet, wie der querystring weitergeht
-#         if (/02/)      { $select2 .= " WHERE `$FOC_TABLENAME`.`shipmentno` in ($var_shipmentno)";}     # do something else
-#         elsif (/03/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`shipmentno` in ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
-#         elsif (/04/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` in ($var_cono)";}     # do something else
-#         elsif (/05/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` in ($var_cono) AND `$FOC_TABLENAME`.`partno` IN ($var_partno)"; }     # do something else
-#         elsif (/06/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`shipmentno` IN ($var_shipmentno)"; }     # do something else
-#         elsif (/07/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`shipmentno` IN ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
-#         elsif (/08/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` in ($var_cono)"; }     # do something else
-#         elsif (/09/)   { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` in ($var_cono) AND `focus_data`.`partno` IN ($var_partno)"; }     # do something else
-#         elsif (/10/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno)";}     # do something else
-#         elsif (/11/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
-#         elsif (/12/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno)";}     # do something else
-#         elsif (/13/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`partno` IN ($var_partno)";}     # do something else
-#         elsif (/14/)  { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno)";}     # do something else
-#        else           { $select2 .= " WHERE `$FOC_TABLENAME`.`cono` IN ($var_cono) AND `focus_data`.`custno` IN ($var_custno) AND `focus_data`.`shipmentno` IN ($var_shipmentno) AND `focus_data`.`partno` IN ($var_partno)";}     # default
-#     }
+#if ($query_variant) {print"<br>var query variant def: $query_variant <br>"};
 
      $select2 .= "ORDER by `$LM1_TABLENAME`.`ack_date`";         #die sortierreihenfolge
-print "<br>Select2: $select2<br><br>\n";
+ print "<br>Select2: $select2<br><br>\n";
      my $dbh2 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
      my $sth2 = $dbh2->prepare($select2);
      $sth2->execute();
