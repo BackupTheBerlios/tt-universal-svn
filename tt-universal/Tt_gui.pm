@@ -534,7 +534,7 @@ sub query_lm_main ($$$$$$){          #reihenfolge: custno,cono,shipmentno,partno
                		$row->{'Paketnummer'} = "<a href=\"$TTO_SERVER_URL_GLS$var2\" target=\"_blank\">$var2</a>";
                }
 
-               if (($row->{'carrier'} eq 'DP') && (length($row->{'Paketnummer'} eq '12'))) {
+               if (($row->{'carrier'} eq 'DP') && (length($row->{'Paketnummer'}) eq '12')) {
                		$var2 = $row->{'Paketnummer'};
                		$row->{'Paketnummer'} = "<a href=\"$TTO_SERVER_URL_DHL$var2\" target=\"_blank\">$var2</a>";
                }
