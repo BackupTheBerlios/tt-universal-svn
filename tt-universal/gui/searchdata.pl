@@ -35,8 +35,7 @@ print "<br><br>\n";
 # Runmodes
 if ($level eq 'start') {
     # Suchformular ausgeben
-    showsearchform2 ();
-#TODO showsearchform2 aufruf anpassen
+    showsearchform ();
 }
 elsif ($level eq 'scl') {                         #scd show cono level 1
     show_cono_level1( $q->param('custno'), $q->param('partno') );

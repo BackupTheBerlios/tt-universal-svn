@@ -4,7 +4,7 @@ sub init_search () {
 
 ###########################################
 #show empty searchform and sub from here depending on query_variant
-sub showsearchform () {
+sub showsearchform_alt () {
 ##########################################
      my $countvar;
      my $filled_field_value = 0;
@@ -190,7 +190,7 @@ sub showsearchform () {
 
 ###########################################
 #show empty searchform and sub from here depending on query_variant
-sub showsearchform2 () {
+sub showsearchform () {
 ##########################################
      my $countvar;
      my $filled_field_value = 0;
@@ -457,6 +457,7 @@ sub query_lm_main ($$$$$$){          #reihenfolge: custno,cono,shipmentno,partno
      my $liste_shipmentno;    #var für rückgabeliste1
      my $liste_lgmboxno;      #var für rückgabeliste2
      my $countvar = 0;
+     my $var2;
 
      print "<br>Ergebnisse aus LM:<br>\n";
 
@@ -517,7 +518,7 @@ sub query_lm_main ($$$$$$){          #reihenfolge: custno,cono,shipmentno,partno
 #if ($query_variant) {print"<br>var query variant def: $query_variant <br>"};
 
      $select2 .= "ORDER by `$LM1_TABLENAME`.`ack_date`";         #die sortierreihenfolge
- print "<br>Select2: $select2<br><br>\n";
+# print "<br>Select2: $select2<br><br>\n";
      my $dbh2 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
      my $sth2 = $dbh2->prepare($select2);
      $sth2->execute();
@@ -528,7 +529,17 @@ sub query_lm_main ($$$$$$){          #reihenfolge: custno,cono,shipmentno,partno
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names2)."\n";
           while(my $row = $sth2->fetchrow_hashref()){
                $count++;
+               if (($row->{'carrier'} eq 'GP') && (length($row->{'Paketnummer'}) eq '12')) {
+               		$var2 = $row->{'Paketnummer'};
+               		$row->{'Paketnummer'} = "<a href=\"$TTO_SERVER_URL_GLS$var2\" target=\"_blank\">$var2</a>";
+               }
+
+               if (($row->{'carrier'} eq 'DP') && (length($row->{'Paketnummer'} eq '12'))) {
+               		$var2 = $row->{'Paketnummer'};
+               		$row->{'Paketnummer'} = "<a href=\"$TTO_SERVER_URL_DHL$var2\" target=\"_blank\">$var2</a>";
+               }
                $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names2})."</tr>\n";
+#			   $var1 =~ s!((?:<td>.*?</td>){8})<td>(.*?)</td>!$1<td><a href="$SERVER_MAIN_FILENAME?level=scd;cono=$2" target="_blank">$2</a></td>!;
                print $var1;
                for $name(@names2){
                     push @{$hash{$name}},$row->{$name};

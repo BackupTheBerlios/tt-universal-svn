@@ -13,7 +13,9 @@ $STAT_DB_PASS = '';        #passwort für zugriff auf DB
 $LOG_TABLE = 'import_log';                   #name der logging tabelle
 $SERVER_NAME = 'http://localhost';           #name des servers für url
 # $SERVER_NAME = 'http://stat.spicers.de';           #name des servers für url
-$SERVER_HELP_URL = 'http://stat.spicers.de/wiki/index.php/Hilfeseite_trackandtrace';
+$SERVER_HELP_URL = 'http://stat.spicers.de/wiki/index.php/Hilfeseite_trackandtrace';		#URL der internen Hilfeseite
+$TTO_SERVER_URL_DHL = 'https://www.dhl.de?paketnummer=';			#URL fŸr Track and trace online bei DHL
+$TTO_SERVER_URL_GLS = 'http://www.gls-germany.com/online/paketstatus.php3?mode=&hasdata=1&filter=all&datatype=paketnr&paketnr=&search.x=51&search.y=10&search=search&paketliste%5B0%5D=';			#URL fŸr Track and trace online bei GLS
 $SERVER_PATH = 'trackandtrace/';                           #subdir des servers für url ACHTUNG! MIT abschliessendem Slash!
 $SERVER_MAIN_FILENAME = 'searchdata.pl';     #name des hauptscripts
 
