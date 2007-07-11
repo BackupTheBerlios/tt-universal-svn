@@ -125,7 +125,7 @@ CREATE TABLE `import_log` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `lm1_data`
+-- Tabellenstruktur fŸr Tabelle `lm1_data`
 --
 
 CREATE TABLE `lm1_data` (
@@ -138,14 +138,15 @@ CREATE TABLE `lm1_data` (
   `ack_date` datetime default NULL,
   `carrier` varchar(10) default NULL,
   `lgmboxno` int(10) unsigned default NULL,
-  `carrierboxno` int(10) unsigned default NULL,
-  `ext_carrierboxno` varchar( 20 ) NOT NULL default '';
-  PRIMARY KEY  (`stockno`,`custno`,`picklistno`,`shipmentno`,`picklistrowpos`),
-  KEY `lmboxno` (`lmboxno`),
+  `carrierboxno` int(10) unsigned NOT NULL default '0',
+  `ext_carrierboxno` varchar(20) NOT NULL default '',
+  `zipcode` varchar(8) default NULL,
+  PRIMARY KEY  (`stockno`,`custno`,`picklistno`,`shipmentno`,`picklistrowpos`,`carrierboxno`),
   KEY `picklistno` (`picklistno`),
-  KEY `shipmentno` (`shipmentno`),
-  KEY `custno` (`custno`)
-) TYPE=MyISAM;
+  KEY `picklistrowpos` (`picklistrowpos`),
+  KEY `lgmboxno` (`lgmboxno`),
+  KEY `zipcode` (`zipcode`)
+) ENGINE=MyISAM;
 
 -- --------------------------------------------------------
 
