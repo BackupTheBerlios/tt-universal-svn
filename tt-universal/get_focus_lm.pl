@@ -19,7 +19,7 @@ $| = 1;                     # don't buffer STDOUT (for EPIC use)
 
 #=============== MAIN =====================
 if ($debug) {print get_timestamp()," ScriptStart!\n"};
-# get_focus();
+get_focus();
 get_lm1();
 if ($debug) {print get_timestamp()," ScriptEnde!\n"};
 #=============== END MAIN =================
