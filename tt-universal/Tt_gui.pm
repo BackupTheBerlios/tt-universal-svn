@@ -457,7 +457,8 @@ sub query_lm_main ($$$$$$){          #reihenfolge: custno,cono,shipmentno,partno
      my $liste_shipmentno;    #var für rückgabeliste1
      my $liste_lgmboxno;      #var für rückgabeliste2
      my $countvar = 0;
-     my $var2;
+     my $tmp_boxno;
+     my $tmp_zipcode;
 
      print "<br>Ergebnisse aus LM:<br>\n";
 
@@ -468,6 +469,7 @@ sub query_lm_main ($$$$$$){          #reihenfolge: custno,cono,shipmentno,partno
          `$LM1_TABLENAME`.`shipmentno`,
      	 date_format(`$LM1_TABLENAME`.`rec_date`,'%d.%m.%Y') as 'rec_date',
      	 date_format(`$LM1_TABLENAME`.`ack_date`,'%d.%m.%Y') as 'ack_date',
+     	 `$LM1_TABLENAME`.`zipcode`,
      	 `$LM1_TABLENAME`.`carrier`,
          `$LM1_TABLENAME`.`carrierboxno`,
      	 `$LM1_TABLENAME`.`lgmboxno`,
@@ -530,13 +532,14 @@ sub query_lm_main ($$$$$$){          #reihenfolge: custno,cono,shipmentno,partno
           while(my $row = $sth2->fetchrow_hashref()){
                $count++;
                if (($row->{'carrier'} eq 'GP') && (length($row->{'Paketnummer'}) eq '12')) {
-               		$var2 = $row->{'Paketnummer'};
-               		$row->{'Paketnummer'} = "<a href=\"$TTO_SERVER_URL_GLS$var2\" target=\"_blank\">$var2</a>";
+               		$tmp_boxno = $row->{'Paketnummer'};
+               		$row->{'Paketnummer'} = "<a href=\"$TTO_SERVER_URL_GLS$tmp_boxno\" target=\"_blank\">$tmp_boxno</a>";
                }
 
-               if (($row->{'carrier'} eq 'DP') && (length($row->{'Paketnummer'}) eq '12')) {
-               		$var2 = $row->{'Paketnummer'};
-               		$row->{'Paketnummer'} = "<a href=\"$TTO_SERVER_URL_DHL$var2\" target=\"_blank\">$var2</a>";
+               if (($row->{'carrier'} eq 'DP') && (length($row->{'Paketnummer'}) eq '12') && (length($row->{'zipcode'}) eq '5')) {
+               		$tmp_boxno = $row->{'Paketnummer'};
+               		$tmp_zipcode = $row->{'zipcode'};
+               		$row->{'Paketnummer'} = "<a href=\"$TTO_SERVER_URL_DHL$tmp_zipcode&idc=$tmp_boxno\" target=\"_blank\">$tmp_boxno</a>";
                }
                $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names2})."</tr>\n";
 #			   $var1 =~ s!((?:<td>.*?</td>){8})<td>(.*?)</td>!$1<td><a href="$SERVER_MAIN_FILENAME?level=scd;cono=$2" target="_blank">$2</a></td>!;
@@ -567,6 +570,8 @@ sub query_gls_gepard($){
 ###########################################
 
      my $liste_shipmentno = $_[0];        #übergabe der shipmentnos als string
+     my $tmp_boxno;
+
      print "<br>Ergebnisse aus GLS Gepard (manueller Versand):\n";
      print "<br>\n";
 
@@ -574,7 +579,7 @@ sub query_gls_gepard($){
      SELECT g.shipmentno, g.name1, g.name2,
      g.street, g.zipcode, g.city, g.unknown8 as 'lgmboxno',
      g.stockno, date_format(g.date1,'%d.%m.%Y') as 'date1',
-     g.carrierboxno  FROM gls_gepard1 g
+     g.carrierboxno  FROM $GLS_GEP1_TABLENAME g
      where g.shipmentno in ($liste_shipmentno)";
 #print "\n$select3\n";
      my $dbh3 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
@@ -587,6 +592,11 @@ sub query_gls_gepard($){
           print "<table border=1>\n".join("",map{'<th>'.$_.'</th>'}@names3)."\n";
           while(my $row = $sth3->fetchrow_hashref()){
                $count++;
+               if (length($row->{'carrierboxno'}) eq '12') {
+               		$tmp_boxno = $row->{'carrierboxno'};
+               		$row->{'carrierboxno'} = "<a href=\"$TTO_SERVER_URL_GLS$tmp_boxno\" target=\"_blank\">$tmp_boxno</a>";
+               }
+
                $var1 = "<tr>".join("",map{'<td>'.$_.'</td>'}@{$row}{@names3})."</tr>\n";
                print $var1;
           }
@@ -607,9 +617,20 @@ sub query_dhl_easylog($){
      print "<br>\n";
 
      my $select4 = "
-     SELECT d.shipmentno, d.name1, d.name2,
-     d.street, d.street_number, d.zipcode, d.city, d.countrycode,
-     d.stockno, d.lgmboxno, d.carrierboxno FROM dhl_easylog1 d
+     SELECT
+     d.shipmentno,
+     date_format(`d`.`credate`,'%d.%m.%Y') as 'date',
+     d.name1,
+     d.name2,
+     d.street,
+     d.street_number,
+     d.zipcode,
+     d.city,
+     d.countrycode,
+     d.stockno,
+     d.lgmboxno,
+     d.carrierboxno
+     FROM $DHL_EASY1_TABLENAME d
      where d.lgmboxno in ($liste_lgmboxno)";
 
      my $dbh4 = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";

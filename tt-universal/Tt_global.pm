@@ -70,7 +70,7 @@ sub get_focus {
 
      #open connection to log and data db
      my $dbhandle = DBI->connect($DB_TYPE, $STAT_DB_USER, $STAT_DB_PASS, {RaiseError => 0}) or die "Database connection not made: $DBI::errstr";
-print "focus-pfad: $STAT_STARTDIR/$FOC_IMPORTDIR";
+# print "focus-pfad: $STAT_STARTDIR/$FOC_IMPORTDIR";
      #process each file found
      foreach my $file ( @filelist ) {
         my	$INFILE_filename = "$STAT_STARTDIR/$FOC_IMPORTDIR/$file"; # input file name
@@ -150,6 +150,9 @@ sub get_lm1 {
                   push @zeile,'';     # zwei leere spalten hinzufuegen
                   push @zeile,'';
              };
+             if ($#zeile == 9){       #nur 10 spalten? dann fehlen zwei
+                  push @zeile,'';     # leere spalte hinzufuegen
+             };
 
              for(my $i=0;$i<=$#zeile;$i++) {        #trimmen vor der ermittlung der ext_paketnummer
                   $zeile[$i] = trim($zeile[$i]);
@@ -177,13 +180,13 @@ sub get_lm1 {
              }
              my $sql = "INSERT IGNORE INTO `$LM1_TABLENAME` ( `stockno` , `custno` , `picklistno` , `shipmentno` , `picklistrowpos` , `rec_date` , `ack_date` , `carrier` , `lgmboxno` , `carrierboxno` , `zipcode` ,`ext_carrierboxno` )
 VALUES ($zeile[0],$zeile[1],$zeile[2],$zeile[3],$zeile[4],$zeile[5],$zeile[6],$zeile[7],$zeile[8],$zeile[9],$zeile[10],$zeile[11])";
-print "\n$sql\n";
+# print "\n$sql\n";
              $dbhandle->do($sql) or warn "do sql error:\n$sql\nDBI Error: $DBI::errstr";
              $countvar++;
              }
         close ( INFILE ) or warn "$0 : failed to close input file $INFILE_filename : $!\n";
         #move file to save-dir
-#        move2save("$STAT_STARTDIR/$LM1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
+        move2save("$STAT_STARTDIR/$LM1_IMPORTDIR","$STAT_STARTDIR/$STAT_SAVEDIR","$file");
         write_log_entry("get_lm1","INFO","FILENAME:$file","0");    #statusinfo zu jeder datei
      } # -----  end foreach  -----
 
