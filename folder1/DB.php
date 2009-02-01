@@ -11,7 +11,7 @@
 // | http://www.php.net/license/2_02.txt.                                 |
 // | If you did not receive a copy of the PHP license and are unable to   |
 // | obtain it through the world-wide-web, please send a note to          |
-// | license@php.net so we can mail you a copy immediately.               |
+// | license@php.net so we can mail you a copy immediately..               |
 // +----------------------------------------------------------------------+
 // | Authors: Daniel Khan <dk@webcluster.at>                              |
 // +----------------------------------------------------------------------+
@@ -48,10 +48,10 @@ class DB_NestedSet_DB extends DB_NestedSet {
 	 * Constructor
 	 *
 	 * @param mixed $dsn DSN as PEAR dsn URI or dsn Array
-	 * @param array $params Database column fields which should be returned  
-	 * 
+	 * @param array $params Database column fields which should be returned
+	 *
 	 */
-	function DB_NestedSet_DB($dsn, $params = array()) 
+	function DB_NestedSet_DB($dsn, $params = array())
     {
 		$this->_debugMessage('DB_NestedSet_DB($dsn, $params = array())');
 		$this->DB_NestedSet($params);
@@ -65,7 +65,7 @@ class DB_NestedSet_DB extends DB_NestedSet {
 	/**
 	 * Destructor
 	 */
-	function _DB_NestedSet_DB() 
+	function _DB_NestedSet_DB()
     {
 		$this->_debugMessage('_DB_NestedSet_DB()');
 		$this->_DB_NestedSet();
@@ -81,7 +81,7 @@ class DB_NestedSet_DB extends DB_NestedSet {
 	* @return object DB The database object
 	* @access private
 	*/
-	function &_db_Connect($dsn) 
+	function &_db_Connect($dsn)
     {
 		$this->_debugMessage('_db_Connect($dsn)');
 		if (is_object($this->db)) {
@@ -101,16 +101,16 @@ class DB_NestedSet_DB extends DB_NestedSet {
 	*
 	* @return void
 	* @access private
-	*/	
-	function _db_Disconnect() 
+	*/
+	function _db_Disconnect()
     {
 		$this->_debugMessage('_db_Disconnect()');
 		if (is_object($this->db)) {
-			@$this->db->disconnect(); 
+			@$this->db->disconnect();
 		}
 
 		return true;
-	}		
+	}
 
     // }}}
 }
